@@ -11,6 +11,7 @@ export interface IMarketDataSource {
     timeframe: string;
     start?: string;
     end?: string;
+    limit?: number;
   }): Promise<ICandle[]>;
 }
 
@@ -20,7 +21,7 @@ export interface ICandle {
   high: number;
   low: number;
   close: number;
-  volume?: number;
+  volume: number;
 }
 
 export class ExchangeEngine {
@@ -32,17 +33,30 @@ export class ExchangeEngine {
     return exchanges[exchange] as IMarketDataSource;
   }
 
-  public static async getCandles(
-    exchange: string,
-    options: {
-      currency: string;
-      asset: string;
-      timeframe: string;
-      start?: string;
-      end?: string;
-      limit?: number;
-    }
-  ): Promise<ICandle[]> {
-    return exchanges[exchange].getCandles(options); // UNDONE удалять последний элемент
+  public static async getCandles({
+    exchange,
+    currency,
+    asset,
+    timeframe,
+    start,
+    end,
+    limit
+  }: {
+    exchange: string;
+    currency: string;
+    asset: string;
+    timeframe: string;
+    start?: string;
+    end?: string;
+    limit?: number;
+  }): Promise<ICandle[]> {
+    return exchanges[exchange].getCandles({
+      currency,
+      asset,
+      timeframe,
+      start,
+      end,
+      limit
+    }); // UNDONE удалять последний элемент
   }
 }

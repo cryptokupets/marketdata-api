@@ -9,21 +9,19 @@ const port = 8080; // default port to listen
 
 app.use(bodyParser.json());
 
-app.post("/api/candles", (req, res) => {
+app.post("/api/candles", async (req, res) => {
   const { exchange, currency, asset, timeframe, start, end, limit } = req.body;
-  // console.log({ exchange, currency, asset, timeframe, start, end, limit });
-
-  ExchangeEngine.getCandles(exchange, {
-    currency,
-    asset,
-    timeframe,
-    start,
-    end,
-    limit
-  }).then(candles => {
-    // console.log(candles.length);
-    return res.json(candles);
-  });
+  res.json(
+    await ExchangeEngine.getCandles({
+      exchange,
+      currency,
+      asset,
+      timeframe,
+      start,
+      end,
+      limit
+    })
+  );
 });
 
 // start the Express server
