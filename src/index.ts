@@ -9,8 +9,9 @@ const port = 8080; // default port to listen
 
 app.use(bodyParser.json());
 
-app.post("/api/candles", async (req, res) => {
-  const { exchange, currency, asset, timeframe, start, end, limit } = req.body;
+app.get("/api/candles/:exchange/:currency/:asset/:timeframe", async (req, res) => {
+  const { exchange, currency, asset, timeframe } = req.params;
+  const { start, end, limit } = req.query;
   res.json(
     await ExchangeEngine.getCandles({
       exchange,

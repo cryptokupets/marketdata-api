@@ -94,7 +94,7 @@ export class Hitbtc implements IMarketDataSource {
 
     // цикл по этим итерациям
     const candles: ICandle[] = [];
-    for (let index = 0; index < iterations; index++) {
+    for (let index = 0; index < iterations; index++) { // UNDONE в действительности это не используется
       const response = await this._requestCandles(
         currency,
         asset,
