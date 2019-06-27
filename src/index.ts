@@ -10,7 +10,7 @@ app.use(express.static(__dirname + "/static"));
 
 app.get("/api/candles/:exchange/:currency/:asset/:timeframe", async (req, res) => {
   const { exchange, currency, asset, timeframe } = req.params;
-  const { start, end, limit } = req.query;
+  const { start, end } = req.query;
   res.json(
     await ExchangeEngine.getCandles({
       exchange,
@@ -18,8 +18,7 @@ app.get("/api/candles/:exchange/:currency/:asset/:timeframe", async (req, res) =
       asset,
       timeframe,
       start,
-      end,
-      limit
+      end
     })
   );
 });

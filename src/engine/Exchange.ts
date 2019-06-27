@@ -1,3 +1,4 @@
+import moment from "moment";
 import { Hitbtc } from "../exchange/hitbtc";
 
 const exchanges: any = {
@@ -9,9 +10,8 @@ export interface IMarketDataSource {
     currency: string;
     asset: string;
     timeframe: string;
-    start?: string;
-    end?: string;
-    limit?: number;
+    start: string;
+    end: string;
   }): Promise<ICandle[]>;
 }
 
@@ -33,30 +33,52 @@ export class ExchangeEngine {
     return exchanges[exchange] as IMarketDataSource;
   }
 
+  public static timeframeToMinutes(timeframe: string): number {
+    const d: any = {};
+    d[timeframe.slice(0, 1).toLowerCase()] = +timeframe.slice(1);
+    return moment.duration(d).asMinutes(); // FIXME для месяца не сработает
+  }
+
   public static async getCandles({
     exchange,
     currency,
     asset,
     timeframe,
     start,
-    end,
-    limit
+    end
   }: {
     exchange: string;
     currency: string;
     asset: string;
     timeframe: string;
-    start?: string;
-    end?: string;
-    limit?: number;
+    start: string;
+    end: string;
   }): Promise<ICandle[]> {
-    return exchanges[exchange].getCandles({
-      currency,
-      asset,
-      timeframe,
-      start,
-      end,
-      limit
-    }); // UNDONE удалять последний элемент
+    const timeframeMinutes = ExchangeEngine.timeframeToMinutes(timeframe);
+    let startMoment = moment.utc(start);
+
+    const candles: ICandle[] = [];
+    let responseLength;
+
+    do {
+      const response = await exchanges[exchange].getCandles({
+        currency,
+        asset,
+        timeframe,
+        start: startMoment.toISOString(),
+        end
+      });
+
+      responseLength = response.length;
+      if (responseLength) {
+        for (const candle of response) {
+          candles.push(candle);
+        }
+        startMoment = moment
+          .utc(response[responseLength - 1].time)
+          .add(timeframeMinutes, "m");
+      }
+    } while (responseLength && startMoment.isSameOrBefore(moment.utc(end)));
+    return candles;
   }
 }
