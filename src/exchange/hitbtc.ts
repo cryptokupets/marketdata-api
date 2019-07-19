@@ -5,6 +5,29 @@ import { ExchangeEngine, ICandle, IMarketDataSource } from "../engine/Exchange";
 const BASE_URL = "https://api.hitbtc.com/api/2/";
 
 export class Hitbtc implements IMarketDataSource {
+  public async getSymbols(): Promise<
+    Array<{ currency: string; asset: string }>
+  > {
+    const options = {
+      baseUrl: BASE_URL,
+      url: "public/symbol"
+    };
+
+    return (JSON.parse(await request.get(options)) as Array<{
+      baseCurrency: string;
+      quoteCurrency: string;
+    }>).map(e => {
+      return {
+        currency: e.quoteCurrency,
+        asset: e.baseCurrency
+      };
+    });
+  }
+
+  public async getTimeframes(): Promise<string[]> {
+    return ["M1", "M3", "M5", "M15", "M30", "H1", "H4", "D1", "D7"];
+  }
+
   public async getCandles({
     currency,
     asset,
@@ -38,7 +61,14 @@ export class Hitbtc implements IMarketDataSource {
     };
 
     return limit
-      ? (JSON.parse(await request.get(options)) as any[]).map(e => {
+      ? (JSON.parse(await request.get(options)) as Array<{
+          timestamp: string;
+          open: string;
+          max: string;
+          min: string;
+          close: string;
+          volume: string;
+        }>).map(e => {
           return {
             time: e.timestamp,
             open: +e.open,
