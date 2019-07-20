@@ -11,9 +11,7 @@ import { TimeframeModel } from "../models/Timeframe";
 export class ExchangeController extends ODataController {
   @odata.GET
   public get(): ExchangeModel[] {
-    return ExchangeEngine.getExchangeKeys().map(
-      key => new ExchangeModel(key)
-    );
+    return ExchangeEngine.getExchangeKeys().map(key => new ExchangeModel(key));
   }
 
   @odata.GET
@@ -28,11 +26,10 @@ export class ExchangeController extends ODataController {
       await ExchangeEngine.getSymbols(exchangeKey),
       e => e.currency
     );
-    return _.toPairs(mSymbols).map(p => {
+    return _.keys(mSymbols).map(k => {
       return new CurrencyModel({
-        key: p[0],
-        exchangeKey,
-        Assets: p[1].map(e => new AssetModel(e.asset))
+        key: k,
+        exchangeKey
       });
     });
   }
