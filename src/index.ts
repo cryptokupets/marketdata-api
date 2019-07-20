@@ -2,11 +2,14 @@
 
 import express from "express";
 import { ExchangeEngine } from "./engine/Exchange";
+import { MarketDataServer } from "./odata/server";
 
 const app = express();
 const port = 8080; // default port to listen
 
 app.use(express.static(__dirname + "/static"));
+
+app.use("/odata", MarketDataServer.create());
 
 app.get("/api/symbols/:exchange", async (req, res) => {
   const { exchange } = req.params;

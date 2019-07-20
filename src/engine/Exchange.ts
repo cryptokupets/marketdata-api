@@ -46,7 +46,7 @@ export class ExchangeEngine {
   public static timeframeToMinutes(timeframe: string): number {
     const d: any = {};
     d[timeframe.slice(0, 1).toLowerCase()] = +timeframe.slice(1);
-    return moment.duration(d).asMinutes(); // FIXME для месяца не сработает
+    return moment.duration(d).asMinutes();
   }
 
   public static async getCandles({
