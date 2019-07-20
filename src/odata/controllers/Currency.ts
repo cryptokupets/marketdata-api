@@ -2,6 +2,7 @@ import _ from "lodash";
 import { Edm, odata, ODataController } from "odata-v4-server";
 import { ExchangeEngine } from "../../engine/Exchange";
 import { CurrencyModel } from "../models/Currency";
+import { ExchangeModel } from "../models/Exchange";
 
 @odata.type(CurrencyModel)
 @Edm.EntitySet("Currency")
@@ -19,6 +20,14 @@ export class CurrencyController extends ODataController {
       key,
       exchangeKey,
       Assets: mSymbols.map(e => e.asset)
+    });
+  }
+
+  @odata.GET("Exchange")
+  public getExchange(@odata.result result: any): ExchangeModel {
+    const { exchangeKey: key } = result;
+    return new ExchangeModel({
+      key
     });
   }
 }
