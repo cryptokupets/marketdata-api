@@ -1,4 +1,5 @@
 import { Edm } from "odata-v4-server";
+import { AssetModel } from "./Asset";
 import { ExchangeModel } from "./Exchange";
 
 export class CurrencyModel {
@@ -13,8 +14,8 @@ export class CurrencyModel {
   @Edm.EntityType(Edm.ForwardRef(() => ExchangeModel))
   public Exchange: ExchangeModel;
 
-  @Edm.Collection(Edm.String)
-  public Assets: string[];
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => AssetModel)))
+  public Assets: AssetModel[];
 
   constructor({
     key,
@@ -23,7 +24,7 @@ export class CurrencyModel {
   }: {
     key: string;
     exchangeKey: string;
-    Assets: string[];
+    Assets: AssetModel[];
   }) {
     Object.assign(this, { key, exchangeKey, Assets });
   }
