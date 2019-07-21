@@ -29,6 +29,10 @@
   "author": {
     "name": "Dmitry Fokin"
   },
+  "engines": {
+    "node": ">= 8.11.2",
+    "npm": ">= 6.10.1"
+  },
   "license": "MIT",
   "dependencies": {
     "dotenv": "^8.0.0",
