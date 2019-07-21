@@ -1,5 +1,5 @@
 import { Edm, odata } from "odata-v4-server";
-import { ExchangeEngine, ICandle } from "../../engine/Exchange";
+import { ExchangeEngine, ICandle } from "../engine/Exchange";
 import { CurrencyModel } from "./Currency";
 import { TimeframeModel } from "./Timeframe";
 

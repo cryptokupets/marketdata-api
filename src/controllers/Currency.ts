@@ -1,6 +1,6 @@
 import _ from "lodash";
 import { Edm, odata, ODataController } from "odata-v4-server";
-import { ExchangeEngine } from "../../engine/Exchange";
+import { ExchangeEngine } from "../engine/Exchange";
 import { AssetModel } from "../models/Asset";
 import { CurrencyModel } from "../models/Currency";
 

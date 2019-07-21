@@ -2,26 +2,18 @@
   "name": "marketdata-api",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/index.js",
+  "main": "lib/server.js",
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
     "build": "tsc",
-    "prestart": "npm run build",
-    "start": "node .",
+    "start": "node demo/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cryptokupets/marketdata-api.git"
-  },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/cryptokupets/marketdata-api/issues"
-  },
-  "homepage": "https://github.com/cryptokupets/marketdata-api#readme",
+  "author": "Dmitry Fokin",
+  "license": "MIT",
   "dependencies": {
+    "dotenv": "^8.0.0",
     "express": "^4.17.1",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
