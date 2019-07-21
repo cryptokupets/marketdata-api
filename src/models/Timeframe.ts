@@ -1,6 +1,6 @@
 import { Edm } from "odata-v4-server";
 
-export class TimeframeModel {
+export class Timeframe {
   @Edm.Key
   @Edm.String
   public key: string;

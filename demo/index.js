@@ -8,9 +8,8 @@ const { MarketDataServer } = require("../lib/server");
 const app = express();
 const port = process.env.PORT;
 
-app.use(MarketDataServer.create());
+app.use("/odata", MarketDataServer.create());
 
-// start the Express server
 app.listen(port, () => {
   console.log(`server started at http://localhost:${port}`);
 });

@@ -1,7 +1,7 @@
 import { Edm } from "odata-v4-server";
 import { ICandle } from "../engine/Exchange";
 
-export class CandleModel implements ICandle {
+export class Candle implements ICandle {
   @Edm.String
   public time: string;
 

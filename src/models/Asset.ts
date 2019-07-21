@@ -1,11 +1,27 @@
 import { Edm } from "odata-v4-server";
 
-export class AssetModel {
+export class Asset {
   @Edm.Key
   @Edm.String
   public key: string;
 
-  constructor(key: string) {
-    Object.assign(this, { key });
+  @Edm.Key
+  @Edm.String
+  public currencyKey: string;
+
+  @Edm.Key
+  @Edm.String
+  public exchangeKey: string;
+
+  constructor({
+    key,
+    currencyKey,
+    exchangeKey
+  }: {
+    key: string;
+    currencyKey: string;
+    exchangeKey: string;
+  }) {
+    Object.assign(this, { key, currencyKey, exchangeKey });
   }
 }

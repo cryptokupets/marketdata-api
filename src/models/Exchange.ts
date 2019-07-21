@@ -1,18 +1,18 @@
 import { Edm, odata } from "odata-v4-server";
 import { ExchangeEngine, ICandle } from "../engine/Exchange";
-import { CurrencyModel } from "./Currency";
-import { TimeframeModel } from "./Timeframe";
+import { Currency } from "./Currency";
+import { Timeframe } from "./Timeframe";
 
-export class ExchangeModel {
+export class Exchange {
   @Edm.Key
   @Edm.String
   public key: string;
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => CurrencyModel)))
-  public Currencies: CurrencyModel[];
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Currency)))
+  public Currencies: Currency[];
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => TimeframeModel)))
-  public Timeframes: TimeframeModel[];
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Timeframe)))
+  public Timeframes: Timeframe[];
 
   constructor(key: string) {
     Object.assign(this, { key });
