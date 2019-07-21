@@ -1,7 +1,15 @@
 {
   "name": "marketdata-api",
   "version": "1.0.0",
-  "description": "",
+  "description": "OData server. Get market data from crypto exchanges open REST API.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cryptokupets/marketdata-api.git"
+  },
+  "homepage": "https://github.com/cryptokupets/marketdata-api",
+  "bugs": {
+    "url": "https://github.com/cryptokupets/marketdata-api/issues"
+  },
   "main": "lib/server.js",
   "scripts": {
     "prebuild": "tslint -c tslint.json -p tsconfig.json --fix",
@@ -9,8 +17,17 @@
     "start": "node demo/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "Dmitry Fokin",
+  "keywords": [
+    "odata",
+    "hitbtc",
+    "exchange",
+    "crypto",
+    "candles",
+    "marketdata"
+  ],
+  "author": {
+    "name": "Dmitry Fokin"
+  },
   "license": "MIT",
   "dependencies": {
     "dotenv": "^8.0.0",
