@@ -35,6 +35,9 @@ export class Backtest {
   @Edm.Double
   public initialBalance: number;
 
+  @Edm.String
+  public indicatorInputs: string;
+
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Candle)))
   public candles: Candle[];
 
@@ -54,6 +57,7 @@ export class Backtest {
     end,
     strategyCode,
     initialBalance,
+    indicatorInputs,
     candles,
     indicators,
     rows
@@ -67,6 +71,7 @@ export class Backtest {
     end?: string;
     strategyCode?: string;
     initialBalance?: number;
+    indicatorInputs?: string;
     candles?: Candle[];
     indicators?: Indicator[];
     rows?: BacktestRow[];
@@ -81,6 +86,7 @@ export class Backtest {
       end,
       strategyCode,
       initialBalance,
+      indicatorInputs,
       candles,
       indicators,
       rows

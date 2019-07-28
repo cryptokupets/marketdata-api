@@ -2,7 +2,11 @@ import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
+import { ExchangeEngine } from "../engine/Exchange";
+import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
+import { Indicator } from "../models/Indicator";
+import { IndicatorRow } from "../models/IndicatorRow";
 
 const collectionName = "backtest";
 
@@ -53,6 +57,51 @@ export class BacktestController extends ODataController {
     const backtest = new Backtest(
       await db.collection(collectionName).findOne({ _id }, { projection })
     );
+    const {
+      exchangeKey,
+      currencyKey,
+      assetKey,
+      timeframe,
+      start,
+      end,
+      indicatorInputs
+    } = backtest;
+
+    // добавить свечи
+    const candles = await ExchangeEngine.getCandles({
+      exchange: exchangeKey,
+      currency: currencyKey,
+      asset: assetKey,
+      timeframe,
+      start,
+      end
+    });
+
+    backtest.candles = candles;
+
+    // добавить индикаторы
+    const indicators = await Promise.all(
+      indicatorInputs
+        .split(";")
+        .map(e => {
+          const parsed = e.split(" ");
+          return { name: parsed[0], options: parsed.splice(1).map(o => +o) };
+        })
+        .map(input =>
+          IndicatorsEngine.getIndicator(candles, input).then(
+            output =>
+              new Indicator({
+                name: input.name,
+                options: input.options,
+                output: output.map(o => new IndicatorRow(o.time, o.values))
+              })
+          )
+        )
+    );
+
+    backtest.indicators = indicators;
+    // добавить сигналы и изменение баланса
+
     return backtest;
   }
 
@@ -66,7 +115,8 @@ export class BacktestController extends ODataController {
     start,
     end,
     strategyCode,
-    initialBalance
+    initialBalance,
+    indicatorInputs
   }: {
     assetKey?: string;
     currencyKey?: string;
@@ -76,6 +126,7 @@ export class BacktestController extends ODataController {
     end?: string;
     strategyCode?: string;
     initialBalance?: number;
+    indicatorInputs?: string;
   }): Promise<Backtest> {
     const backtest = new Backtest({
       assetKey,
@@ -85,7 +136,8 @@ export class BacktestController extends ODataController {
       start,
       end,
       strategyCode,
-      initialBalance
+      initialBalance,
+      indicatorInputs
     });
     backtest._id = (await (await connect())
       .collection(collectionName)
@@ -96,38 +148,11 @@ export class BacktestController extends ODataController {
   @odata.PATCH
   public async patch(
     @odata.key key: string,
-    @odata.body
-    {
-      assetKey,
-      currencyKey,
-      exchangeKey,
-      timeframe,
-      start,
-      end,
-      strategyCode,
-      initialBalance
-    }: {
-      assetKey?: string;
-      currencyKey?: string;
-      exchangeKey?: string;
-      timeframe?: string;
-      start?: string;
-      end?: string;
-      strategyCode?: string;
-      initialBalance?: number;
-    }
+    @odata.body delta: any
   ): Promise<number> {
-    const delta = new Backtest({
-      assetKey,
-      currencyKey,
-      exchangeKey,
-      timeframe,
-      start,
-      end,
-      strategyCode,
-      initialBalance
-    });
-
+    if (delta._id) {
+      delete delta._id;
+    }
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
     return (await connect())
