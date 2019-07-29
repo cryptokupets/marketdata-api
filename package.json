@@ -1,6 +1,6 @@
 {
   "name": "marketdata-api",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "OData server. Get market data from crypto exchanges open REST API.",
   "repository": {
     "type": "git",
@@ -20,11 +20,18 @@
   },
   "keywords": [
     "odata",
+    "api",
     "hitbtc",
     "exchange",
+    "stock",
     "crypto",
     "candles",
-    "marketdata"
+    "marketdata",
+    "currency",
+    "simulate",
+    "trade",
+    "backtest",
+    "tulind"
   ],
   "author": {
     "name": "Dmitry Fokin"
