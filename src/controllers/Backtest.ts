@@ -146,7 +146,7 @@ export class BacktestController extends ODataController {
       estimateAmount: 0
     });
 
-    const balance = candles.map((candle, index, array) => {
+    const balance = candles.map(candle => {
       // если нет сделок - то брать предыдущий
       // estimate вычислить на основе нового курса
       // если есть сделка - то переводить
@@ -176,6 +176,9 @@ export class BacktestController extends ODataController {
     });
 
     backtest.balance = balance;
+    backtest.finalBalance = balance[balance.length - 1].estimateAmount;
+    backtest.profit = backtest.finalBalance - backtest.initialBalance;
+    backtest.result = backtest.profit / backtest.initialBalance;
 
     return backtest;
   }
