@@ -6,6 +6,7 @@ import { BacktestEngine } from "../engine/Backtest";
 import { ExchangeEngine } from "../engine/Exchange";
 import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
+import { BalanceItem } from "../models/BalanceItem";
 import { Indicator } from "../models/Indicator";
 import { IndicatorRow } from "../models/IndicatorRow";
 import { Trade } from "../models/Trade";
@@ -135,6 +136,46 @@ export class BacktestController extends ODataController {
     }
 
     backtest.trades = trades;
+
+    // пройти по всем свечам
+    // при наличии сделки менять баланс
+    let prevBalanceItem: BalanceItem = new BalanceItem({
+      time: candles[0].time,
+      currencyAmount: initialBalance,
+      assetAmount: 0,
+      estimateAmount: 0
+    });
+
+    const balance = candles.map((candle, index, array) => {
+      // если нет сделок - то брать предыдущий
+      // estimate вычислить на основе нового курса
+      // если есть сделка - то переводить
+      const { currencyAmount, assetAmount } = prevBalanceItem;
+      const { time, close: price } = candle;
+      const balanceItem: BalanceItem = new BalanceItem({ time });
+      const trade = trades.find(e => e.time === time);
+      if (trade) {
+        if (trade.side === "buy") {
+          balanceItem.currencyAmount = 0;
+          balanceItem.assetAmount = currencyAmount / price;
+          balanceItem.estimateAmount = currencyAmount;
+        } else {
+          balanceItem.assetAmount = 0;
+          balanceItem.currencyAmount = assetAmount * price;
+          balanceItem.estimateAmount = assetAmount * price;
+        }
+      } else {
+        Object.assign(balanceItem, {
+          currencyAmount,
+          assetAmount,
+          estimateAmount: currencyAmount || assetAmount * price
+        });
+      }
+      prevBalanceItem = balanceItem;
+      return balanceItem;
+    });
+
+    backtest.balance = balance;
 
     return backtest;
   }

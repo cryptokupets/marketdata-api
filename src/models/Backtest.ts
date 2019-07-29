@@ -2,6 +2,7 @@ import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
 import { Advice } from "./Advice";
 import { BacktestRow } from "./BacktestRow";
+import { BalanceItem } from "./BalanceItem";
 import { Candle } from "./Candle";
 import { Indicator } from "./Indicator";
 import { Trade } from "./Trade";
@@ -52,6 +53,9 @@ export class Backtest {
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Trade)))
   public trades: Trade[];
 
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => BalanceItem)))
+  public balance: BalanceItem[];
+
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => BacktestRow)))
   public rows: BacktestRow[];
 
@@ -70,6 +74,7 @@ export class Backtest {
     indicators,
     advices,
     trades,
+    balance,
     rows
   }: {
     _id?: ObjectID;
@@ -86,6 +91,7 @@ export class Backtest {
     indicators?: Indicator[];
     advices?: Advice[];
     trades?: Trade[];
+    balance?: BalanceItem[];
     rows?: BacktestRow[];
   }) {
     Object.assign(this, {
@@ -103,6 +109,7 @@ export class Backtest {
       indicators,
       advices,
       trades,
+      balance,
       rows
     });
   }
