@@ -2,6 +2,7 @@ import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
+import { BacktestEngine } from "../engine/Backtest";
 import { ExchangeEngine } from "../engine/Exchange";
 import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
@@ -64,7 +65,9 @@ export class BacktestController extends ODataController {
       timeframe,
       start,
       end,
-      indicatorInputs
+      indicatorInputs,
+      strategyCode,
+      initialBalance
     } = backtest;
 
     // добавить свечи
@@ -101,6 +104,13 @@ export class BacktestController extends ODataController {
 
     backtest.indicators = indicators;
     // добавить сигналы и изменение баланса
+
+    const advices = await BacktestEngine.getAdvices({
+      strategyFunction: new Function("indicator", strategyCode),
+      indicator: indicators[0]
+    });
+
+    backtest.advices = advices;
 
     return backtest;
   }
