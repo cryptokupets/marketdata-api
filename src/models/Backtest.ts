@@ -4,6 +4,7 @@ import { Advice } from "./Advice";
 import { BacktestRow } from "./BacktestRow";
 import { Candle } from "./Candle";
 import { Indicator } from "./Indicator";
+import { Trade } from "./Trade";
 
 export class Backtest {
   @Edm.Key
@@ -48,6 +49,9 @@ export class Backtest {
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Advice)))
   public advices: Advice[];
 
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Trade)))
+  public trades: Trade[];
+
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => BacktestRow)))
   public rows: BacktestRow[];
 
@@ -65,6 +69,7 @@ export class Backtest {
     candles,
     indicators,
     advices,
+    trades,
     rows
   }: {
     _id?: ObjectID;
@@ -80,6 +85,7 @@ export class Backtest {
     candles?: Candle[];
     indicators?: Indicator[];
     advices?: Advice[];
+    trades?: Trade[];
     rows?: BacktestRow[];
   }) {
     Object.assign(this, {
@@ -96,6 +102,7 @@ export class Backtest {
       candles,
       indicators,
       advices,
+      trades,
       rows
     });
   }

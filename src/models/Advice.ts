@@ -7,7 +7,10 @@ export class Advice {
   @Edm.Int32
   public value: number;
 
-  constructor(time: string, value: number) {
-    Object.assign(this, { time, value });
+  constructor({ time, value }: { time: string; value: number }) {
+    Object.assign(this, {
+      time,
+      value
+    });
   }
 }

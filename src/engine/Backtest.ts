@@ -11,18 +11,18 @@ export class BacktestEngine {
     indicator: Indicator;
   }): Promise<Advice[]> {
     const { output } = indicator;
-    return output.map(
-      (e, index) => {
-        return new Advice(
-          e.time,
-          strategyFunction(
+    return output
+      .map((e, index) => {
+        return new Advice({
+          time: e.time,
+          value: strategyFunction(
             output
               .slice(0, index + 1)
               .map(e1 => e1.values)
               .reverse()
           )
-        );
-      }
-    ).filter(e => e.value);
+        });
+      })
+      .filter(e => e.value);
   }
 }

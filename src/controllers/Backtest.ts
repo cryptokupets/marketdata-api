@@ -8,6 +8,7 @@ import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
 import { Indicator } from "../models/Indicator";
 import { IndicatorRow } from "../models/IndicatorRow";
+import { Trade } from "../models/Trade";
 
 const collectionName = "backtest";
 
@@ -111,6 +112,29 @@ export class BacktestController extends ODataController {
     });
 
     backtest.advices = advices;
+
+    // сделки
+    // перебор по советам
+    // при изменении совета происходит сделка
+    let lastAdviceValue = -1;
+    const trades: Trade[] = [];
+
+    for (const { time, value } of advices) {
+      if (value !== lastAdviceValue) {
+        // найти нужную свечу
+        const candle = candles.find(e => e.time === time);
+        trades.push(
+          new Trade({
+            time,
+            side: value > 0 ? "buy" : "sell",
+            price: candle.close
+          })
+        );
+        lastAdviceValue = value;
+      }
+    }
+
+    backtest.trades = trades;
 
     return backtest;
   }
