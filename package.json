@@ -1,6 +1,6 @@
 {
   "name": "marketdata-api",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "OData server. Get market data from crypto exchanges open REST API.",
   "repository": {
     "type": "git",

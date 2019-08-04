@@ -1,6 +1,7 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
 import { BacktestOutput } from "./BacktestOutput";
+import { Currency } from "./Currency";
 import { Exchange } from "./Exchange";
 
 export class Backtest {
@@ -45,6 +46,9 @@ export class Backtest {
 
   @Edm.String
   public indicatorInputs: string;
+
+  @Edm.EntityType(Edm.ForwardRef(() => Currency))
+  public Currency: Currency;
 
   @Edm.EntityType(Edm.ForwardRef(() => Exchange))
   public Exchange: Exchange;

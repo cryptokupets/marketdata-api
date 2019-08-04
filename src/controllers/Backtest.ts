@@ -8,6 +8,7 @@ import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
 import { BacktestOutput } from "../models/BacktestOutput";
 import { BalanceItem } from "../models/BalanceItem";
+import { Currency } from "../models/Currency";
 import { Exchange } from "../models/Exchange";
 import { Indicator } from "../models/Indicator";
 import { IndicatorRow } from "../models/IndicatorRow";
@@ -131,9 +132,28 @@ export class BacktestController extends ODataController {
   }
 
   @odata.GET("Exchange")
-  public getExchange(@odata.result result: any): Exchange {
-    const { exchangeKey } = result;
+  public async getExchange(@odata.result result: any): Promise<Exchange> {
+    const { _id: key } = result;
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(key);
+    const db = await connect();
+    const {
+      exchangeKey,
+    } = new Backtest(await db.collection(collectionName).findOne({ _id }));
     return new Exchange(exchangeKey);
+  }
+
+  @odata.GET("Currency")
+  public async getCurrency(@odata.result result: any): Promise<Currency> {
+    const { _id: key } = result;
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(key);
+    const db = await connect();
+    const {
+      exchangeKey,
+      currencyKey
+    } = new Backtest(await db.collection(collectionName).findOne({ _id }));
+    return new Currency({ key: currencyKey, exchangeKey });
   }
 
   @odata.GET("Output")
