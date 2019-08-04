@@ -7,7 +7,7 @@ const exchanges: any = {
 
 export interface IMarketDataSource {
   getSymbols(): Promise<Array<{ currency: string; asset: string }>>;
-  getTimeframes(): Promise<Array<{ key: string; minutes: number }>>;
+  getTimeframes(): Promise<string[]>;
   getCandles(options: {
     currency: string;
     asset: string;
@@ -35,7 +35,7 @@ export class ExchangeEngine {
 
   public static async getTimeframes(
     exchange: string
-  ): Promise<Array<{ key: string; minutes: number }>> {
+  ): Promise<string[]> {
     return await (exchanges[exchange] as IMarketDataSource).getTimeframes();
   }
 

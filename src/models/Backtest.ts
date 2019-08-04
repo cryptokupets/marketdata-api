@@ -1,10 +1,7 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
-import { Advice } from "./Advice";
-import { BalanceItem } from "./BalanceItem";
-import { Candle } from "./Candle";
-import { Indicator } from "./Indicator";
-import { Trade } from "./Trade";
+import { BacktestOutput } from "./BacktestOutput";
+import { Exchange } from "./Exchange";
 
 export class Backtest {
   @Edm.Key
@@ -49,20 +46,11 @@ export class Backtest {
   @Edm.String
   public indicatorInputs: string;
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Candle)))
-  public candles: Candle[];
+  @Edm.EntityType(Edm.ForwardRef(() => Exchange))
+  public Exchange: Exchange;
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Indicator)))
-  public indicators: Indicator[];
-
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Advice)))
-  public advices: Advice[];
-
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Trade)))
-  public trades: Trade[];
-
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => BalanceItem)))
-  public balance: BalanceItem[];
+  @Edm.EntityType(Edm.ForwardRef(() => BacktestOutput))
+  public Output: BacktestOutput;
 
   constructor({
     _id,
@@ -77,12 +65,7 @@ export class Backtest {
     finalBalance,
     profit,
     result,
-    indicatorInputs,
-    candles,
-    indicators,
-    advices,
-    trades,
-    balance
+    indicatorInputs
   }: {
     _id?: ObjectID;
     assetKey?: string;
@@ -97,11 +80,6 @@ export class Backtest {
     profit?: number;
     result?: number;
     indicatorInputs?: string;
-    candles?: Candle[];
-    indicators?: Indicator[];
-    advices?: Advice[];
-    trades?: Trade[];
-    balance?: BalanceItem[];
   }) {
     Object.assign(this, {
       _id,
@@ -116,12 +94,7 @@ export class Backtest {
       finalBalance,
       profit,
       result,
-      indicatorInputs,
-      candles,
-      indicators,
-      advices,
-      trades,
-      balance
+      indicatorInputs
     });
   }
 }

@@ -6,7 +6,9 @@ import { BacktestEngine } from "../engine/Backtest";
 import { ExchangeEngine } from "../engine/Exchange";
 import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
+import { BacktestOutput } from "../models/BacktestOutput";
 import { BalanceItem } from "../models/BalanceItem";
+import { Exchange } from "../models/Exchange";
 import { Indicator } from "../models/Indicator";
 import { IndicatorRow } from "../models/IndicatorRow";
 import { Trade } from "../models/Trade";
@@ -57,130 +59,9 @@ export class BacktestController extends ODataController {
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
     const db = await connect();
-    const backtest = new Backtest(
+    return new Backtest(
       await db.collection(collectionName).findOne({ _id }, { projection })
     );
-    const {
-      exchangeKey,
-      currencyKey,
-      assetKey,
-      timeframe,
-      start,
-      end,
-      indicatorInputs,
-      strategyCode,
-      initialBalance
-    } = backtest;
-
-    // добавить свечи
-    const candles = await ExchangeEngine.getCandles({
-      exchange: exchangeKey,
-      currency: currencyKey,
-      asset: assetKey,
-      timeframe,
-      start,
-      end
-    });
-
-    backtest.candles = candles;
-
-    // добавить индикаторы
-    const indicators = await Promise.all(
-      indicatorInputs
-        .split(";")
-        .map(e => {
-          const parsed = e.split(" ");
-          return { name: parsed[0], options: parsed.splice(1).map(o => +o) };
-        })
-        .map(input =>
-          IndicatorsEngine.getIndicator(candles, input).then(
-            output =>
-              new Indicator({
-                name: input.name,
-                options: input.options,
-                output: output.map(o => new IndicatorRow(o.time, o.values))
-              })
-          )
-        )
-    );
-
-    backtest.indicators = indicators;
-    // добавить сигналы и изменение баланса
-
-    const advices = await BacktestEngine.getAdvices({
-      strategyFunction: new Function("indicator", strategyCode),
-      indicator: indicators[0]
-    });
-
-    backtest.advices = advices;
-
-    // сделки
-    // перебор по советам
-    // при изменении совета происходит сделка
-    let lastAdviceValue = -1;
-    const trades: Trade[] = [];
-
-    for (const { time, value } of advices) {
-      if (value !== lastAdviceValue) {
-        // найти нужную свечу
-        const candle = candles.find(e => e.time === time);
-        trades.push(
-          new Trade({
-            time,
-            side: value > 0 ? "buy" : "sell",
-            price: candle.close
-          })
-        );
-        lastAdviceValue = value;
-      }
-    }
-
-    backtest.trades = trades;
-
-    // пройти по всем свечам
-    // при наличии сделки менять баланс
-    let prevBalanceItem: BalanceItem = new BalanceItem({
-      time: candles[0].time,
-      currencyAmount: initialBalance,
-      assetAmount: 0,
-      estimateAmount: 0
-    });
-
-    const balance = candles.map(candle => {
-      // если нет сделок - то брать предыдущий
-      // estimate вычислить на основе нового курса
-      // если есть сделка - то переводить
-      const { currencyAmount, assetAmount } = prevBalanceItem;
-      const { time, close: price } = candle;
-      const balanceItem: BalanceItem = new BalanceItem({ time });
-      const trade = trades.find(e => e.time === time);
-      if (trade) {
-        if (trade.side === "buy") {
-          balanceItem.currencyAmount = 0;
-          balanceItem.assetAmount = currencyAmount / price;
-          balanceItem.estimateAmount = currencyAmount;
-        } else {
-          balanceItem.assetAmount = 0;
-          balanceItem.currencyAmount = assetAmount * price;
-          balanceItem.estimateAmount = assetAmount * price;
-        }
-      } else {
-        Object.assign(balanceItem, {
-          currencyAmount,
-          assetAmount,
-          estimateAmount: currencyAmount || assetAmount * price
-        });
-      }
-      prevBalanceItem = balanceItem;
-      return balanceItem;
-    });
-
-    backtest.balance = balance;
-    backtest.finalBalance = balance[balance.length - 1].estimateAmount;
-    backtest.profit = backtest.finalBalance - backtest.initialBalance;
-    backtest.result = backtest.profit / backtest.initialBalance;
-
-    return backtest;
   }
 
   @odata.POST
@@ -247,5 +128,140 @@ export class BacktestController extends ODataController {
       .collection(collectionName)
       .deleteOne({ _id })
       .then(result => result.deletedCount);
+  }
+
+  @odata.GET("Exchange")
+  public getExchange(@odata.result result: any): Exchange {
+    const { exchangeKey } = result;
+    return new Exchange(exchangeKey);
+  }
+
+  @odata.GET("Output")
+  public async getOutput(@odata.result result: any): Promise<BacktestOutput> {
+    const { _id: key } = result;
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(key);
+    const db = await connect();
+    const {
+      exchangeKey,
+      currencyKey,
+      assetKey,
+      timeframe,
+      start,
+      end,
+      indicatorInputs,
+      strategyCode,
+      initialBalance
+    } = new Backtest(await db.collection(collectionName).findOne({ _id }));
+
+    // добавить свечи
+    const candles = await ExchangeEngine.getCandles({
+      exchange: exchangeKey,
+      currency: currencyKey,
+      asset: assetKey,
+      timeframe,
+      start,
+      end
+    });
+
+    // добавить индикаторы
+    const indicators = await Promise.all(
+      indicatorInputs
+        .split(";")
+        .map(e => {
+          const parsed = e.split(" ");
+          return { name: parsed[0], options: parsed.splice(1).map(o => +o) };
+        })
+        .map(input =>
+          IndicatorsEngine.getIndicator(candles, input).then(
+            output =>
+              new Indicator({
+                name: input.name,
+                options: input.options,
+                output: output.map(o => new IndicatorRow(o.time, o.values))
+              })
+          )
+        )
+    );
+
+    // добавить сигналы и изменение баланса
+    const advices = await BacktestEngine.getAdvices({
+      strategyFunction: new Function("indicator", strategyCode),
+      indicator: indicators[0]
+    });
+
+    // сделки
+    // перебор по советам
+    // при изменении совета происходит сделка
+    let lastAdviceValue = -1;
+    const trades: Trade[] = [];
+
+    for (const { time, value } of advices) {
+      if (value !== lastAdviceValue) {
+        // найти нужную свечу
+        const candle = candles.find(e => e.time === time);
+        trades.push(
+          new Trade({
+            time,
+            side: value > 0 ? "buy" : "sell",
+            price: candle.close
+          })
+        );
+        lastAdviceValue = value;
+      }
+    }
+
+    // пройти по всем свечам
+    // при наличии сделки менять баланс
+    let prevBalanceItem: BalanceItem = new BalanceItem({
+      time: candles[0].time,
+      currencyAmount: initialBalance,
+      assetAmount: 0,
+      estimateAmount: 0
+    });
+
+    const balance = candles.map(candle => {
+      // если нет сделок - то брать предыдущий
+      // estimate вычислить на основе нового курса
+      // если есть сделка - то переводить
+      const { currencyAmount, assetAmount } = prevBalanceItem;
+      const { time, close: price } = candle;
+      const balanceItem: BalanceItem = new BalanceItem({ time });
+      const trade = trades.find(e => e.time === time);
+      if (trade) {
+        if (trade.side === "buy") {
+          balanceItem.currencyAmount = 0;
+          balanceItem.assetAmount = currencyAmount / price;
+          balanceItem.estimateAmount = currencyAmount;
+        } else {
+          balanceItem.assetAmount = 0;
+          balanceItem.currencyAmount = assetAmount * price;
+          balanceItem.estimateAmount = assetAmount * price;
+        }
+      } else {
+        Object.assign(balanceItem, {
+          currencyAmount,
+          assetAmount,
+          estimateAmount: currencyAmount || assetAmount * price
+        });
+      }
+      prevBalanceItem = balanceItem;
+      return balanceItem;
+    });
+
+    const finalBalance = balance[balance.length - 1].estimateAmount;
+    const profit = finalBalance - initialBalance;
+    const backtestResult = profit / initialBalance;
+
+    return new BacktestOutput({
+      finalBalance,
+      profit,
+      result: backtestResult,
+      candles,
+      indicators,
+      advices,
+      trades,
+      balance
+    });
   }
 }
