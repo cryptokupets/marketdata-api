@@ -24,8 +24,20 @@ export class Hitbtc implements IMarketDataSource {
     });
   }
 
-  public async getTimeframes(): Promise<string[]> {
-    return ["M1", "M3", "M5", "M15", "M30", "H1", "H4", "D1", "D7"];
+  public async getTimeframes(): Promise<
+    Array<{ key: string; minutes: number }>
+  > {
+    return [
+      { key: "M1", minutes: 1 },
+      { key: "M3", minutes: 3 },
+      { key: "M5", minutes: 5 },
+      { key: "M15", minutes: 15 },
+      { key: "M30", minutes: 30 },
+      { key: "H1", minutes: 60 },
+      { key: "H4", minutes: 240 },
+      { key: "D1", minutes: 1440 },
+      { key: "D7", minutes: 10080 }
+    ];
   }
 
   public async getCandles({
