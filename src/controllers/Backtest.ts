@@ -75,7 +75,10 @@ export class BacktestController extends ODataController {
     end,
     strategyCode,
     initialBalance,
-    indicatorInputs
+    indicatorInputs,
+    stoplossEnabled,
+    stopLossLevel,
+    fee
   }: {
     assetKey?: string;
     currencyKey?: string;
@@ -86,6 +89,9 @@ export class BacktestController extends ODataController {
     strategyCode?: string;
     initialBalance?: number;
     indicatorInputs?: string;
+    stoplossEnabled?: boolean;
+    stopLossLevel?: number;
+    fee?: number;
   }): Promise<Backtest> {
     const backtest = new Backtest({
       assetKey,
@@ -96,7 +102,10 @@ export class BacktestController extends ODataController {
       end,
       strategyCode,
       initialBalance,
-      indicatorInputs
+      indicatorInputs,
+      stoplossEnabled,
+      stopLossLevel,
+      fee
     });
     backtest._id = (await (await connect())
       .collection(collectionName)
@@ -157,7 +166,10 @@ export class BacktestController extends ODataController {
       end,
       indicatorInputs,
       strategyCode,
-      initialBalance
+      initialBalance,
+      stoplossEnabled,
+      stopLossLevel,
+      fee
     } = new Backtest(await db.collection(collectionName).findOne({ _id }));
 
     // добавить свечи
@@ -199,21 +211,51 @@ export class BacktestController extends ODataController {
     // сделки
     // перебор по советам
     // при изменении совета происходит сделка
-    let lastAdviceValue = -1;
     const trades: Trade[] = [];
+    let positionOpen = false; // изначально закрыта
+    let stopLossPrice;
+    let advice;
 
-    for (const { time, value } of advices) {
-      if (value !== lastAdviceValue) {
-        // найти нужную свечу
-        const candle = candles.find(e => e.time === time);
-        trades.push(
-          new Trade({
-            time,
-            side: value > 0 ? "buy" : "sell",
-            price: candle.close
-          })
-        );
-        lastAdviceValue = value;
+    for (const { time, close } of candles) {
+      // позиция закрыта или открыта
+      if (!positionOpen) {
+        // если позиция закрыта, то ожидается сигнал на покупку
+        advice = advices.find(e => e.time === time);
+        if (advice && advice.value === 1) {
+          trades.push(
+            new Trade({
+              time,
+              side: "buy",
+              price: close
+            })
+          );
+          if (stoplossEnabled) { stopLossPrice = close * stopLossLevel; }
+          positionOpen = true;
+        }
+      } else {
+        // если позиция открыта, то ожидается сигнал на продажу или стоп-лосс
+        if (stoplossEnabled && close < stopLossPrice) {
+          trades.push(
+            new Trade({
+              time,
+              side: "sell",
+              price: stopLossPrice
+            })
+          );
+          positionOpen = false;
+        } else {
+          advice = advices.find(e => e.time === time);
+          if (advice && advice.value === -1) {
+            trades.push(
+              new Trade({
+                time,
+                side: "sell",
+                price: close
+              })
+            );
+            positionOpen = false;
+          }
+        }
       }
     }
 
@@ -231,24 +273,25 @@ export class BacktestController extends ODataController {
       // estimate вычислить на основе нового курса
       // если есть сделка - то переводить
       const { currencyAmount, assetAmount } = prevBalanceItem;
-      const { time, close: price } = candle;
+      const { time, close } = candle;
       const balanceItem: BalanceItem = new BalanceItem({ time });
       const trade = trades.find(e => e.time === time);
       if (trade) {
+        const { price } = trade;
         if (trade.side === "buy") {
           balanceItem.currencyAmount = 0;
-          balanceItem.assetAmount = currencyAmount / price;
-          balanceItem.estimateAmount = currencyAmount;
+          balanceItem.assetAmount = (currencyAmount * (1 - fee)) / price;
+          balanceItem.estimateAmount = currencyAmount * (1 - fee);
         } else {
           balanceItem.assetAmount = 0;
-          balanceItem.currencyAmount = assetAmount * price;
-          balanceItem.estimateAmount = assetAmount * price;
+          balanceItem.currencyAmount = assetAmount * price * (1 - fee);
+          balanceItem.estimateAmount = assetAmount * price * (1 - fee);
         }
       } else {
         Object.assign(balanceItem, {
           currencyAmount,
           assetAmount,
-          estimateAmount: currencyAmount || assetAmount * price
+          estimateAmount: currencyAmount || assetAmount * close * (1 - fee)
         });
       }
       prevBalanceItem = balanceItem;

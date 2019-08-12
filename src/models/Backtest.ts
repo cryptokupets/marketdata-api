@@ -34,6 +34,15 @@ export class Backtest {
   @Edm.Double
   public initialBalance: number;
 
+  @Edm.Boolean
+  public stoplossEnabled: boolean;
+
+  @Edm.Double
+  public stopLossLevel: number;
+
+  @Edm.Double
+  public fee: number;
+
   @Edm.Double
   public finalBalance: number;
 
@@ -65,7 +74,10 @@ export class Backtest {
     finalBalance,
     profit,
     result,
-    indicatorInputs
+    indicatorInputs,
+    stoplossEnabled,
+    stopLossLevel,
+    fee
   }: {
     _id?: ObjectID;
     assetKey?: string;
@@ -80,6 +92,9 @@ export class Backtest {
     profit?: number;
     result?: number;
     indicatorInputs?: string;
+    stoplossEnabled?: boolean;
+    stopLossLevel?: number;
+    fee?: number;
   }) {
     Object.assign(this, {
       _id,
@@ -94,7 +109,10 @@ export class Backtest {
       finalBalance,
       profit,
       result,
-      indicatorInputs
+      indicatorInputs,
+      stoplossEnabled,
+      stopLossLevel,
+      fee: fee || 0
     });
   }
 }
