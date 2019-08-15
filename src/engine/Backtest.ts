@@ -1,16 +1,24 @@
 import { Advice } from "../models/Advice";
 import { Indicator } from "../models/Indicator";
+import { ICandle } from "./Exchange";
 
 export class BacktestEngine {
   public static async getAdvices({
     strategyFunction,
-    indicator
+    candles,
+    indicators,
+    parameters
   }: {
     // tslint:disable-next-line: ban-types
     strategyFunction: Function;
-    indicator: Indicator;
+    candles: ICandle[];
+    indicators: Indicator[];
+    parameters: number[];
   }): Promise<Advice[]> {
-    const { output } = indicator;
+    const { output } = indicators[0]; // UNDONE сделать для нескольких индикаторов
+    // перебор выполнять по свечам
+    // лучше с обратной стороны
+    // лучше сразу ограничить минимальным набором данных
     return output
       .map((e, index) => {
         return new Advice({

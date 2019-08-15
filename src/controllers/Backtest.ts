@@ -2,16 +2,8 @@ import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
-import { BacktestEngine } from "../engine/Backtest";
-import { ExchangeEngine } from "../engine/Exchange";
-import { IndicatorsEngine } from "../engine/Indicators";
 import { Backtest } from "../models/Backtest";
-import { BacktestOutput } from "../models/BacktestOutput";
-import { BalanceItem } from "../models/BalanceItem";
 import { Exchange } from "../models/Exchange";
-import { Indicator } from "../models/Indicator";
-import { IndicatorRow } from "../models/IndicatorRow";
-import { Trade } from "../models/Trade";
 
 const collectionName = "backtest";
 
@@ -65,48 +57,11 @@ export class BacktestController extends ODataController {
   }
 
   @odata.POST
-  public async post(@odata.body
-  {
-    assetKey,
-    currencyKey,
-    exchangeKey,
-    timeframe,
-    start,
-    end,
-    strategyCode,
-    initialBalance,
-    indicatorInputs,
-    stoplossEnabled,
-    stopLossLevel,
-    fee
-  }: {
-    assetKey?: string;
-    currencyKey?: string;
-    exchangeKey?: string;
-    timeframe?: string;
-    start?: string;
-    end?: string;
-    strategyCode?: string;
-    initialBalance?: number;
-    indicatorInputs?: string;
-    stoplossEnabled?: boolean;
-    stopLossLevel?: number;
-    fee?: number;
-  }): Promise<Backtest> {
-    const backtest = new Backtest({
-      assetKey,
-      currencyKey,
-      exchangeKey,
-      timeframe,
-      start,
-      end,
-      strategyCode,
-      initialBalance,
-      indicatorInputs,
-      stoplossEnabled,
-      stopLossLevel,
-      fee
-    });
+  public async post(
+    @odata.body
+    body: any
+  ): Promise<Backtest> {
+    const backtest = new Backtest(body);
     backtest._id = (await (await connect())
       .collection(collectionName)
       .insertOne(backtest)).insertedId;
@@ -149,168 +104,5 @@ export class BacktestController extends ODataController {
       await db.collection(collectionName).findOne({ _id })
     );
     return new Exchange(exchangeKey);
-  }
-
-  @odata.GET("Output")
-  public async getOutput(@odata.result result: any): Promise<BacktestOutput> {
-    const { _id: key } = result;
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-    const db = await connect();
-    const {
-      exchangeKey,
-      currencyKey,
-      assetKey,
-      timeframe,
-      start,
-      end,
-      indicatorInputs,
-      strategyCode,
-      initialBalance,
-      stoplossEnabled,
-      stopLossLevel,
-      fee
-    } = new Backtest(await db.collection(collectionName).findOne({ _id }));
-
-    // добавить свечи
-    const candles = await ExchangeEngine.getCandles({
-      exchange: exchangeKey,
-      currency: currencyKey,
-      asset: assetKey,
-      timeframe,
-      start,
-      end
-    });
-
-    // добавить индикаторы
-    const indicators = await Promise.all(
-      indicatorInputs
-        .split(";")
-        .map(e => {
-          const parsed = e.split(" ");
-          return { name: parsed[0], options: parsed.splice(1).map(o => +o) };
-        })
-        .map(input =>
-          IndicatorsEngine.getIndicator(candles, input).then(
-            output =>
-              new Indicator({
-                name: input.name,
-                options: input.options,
-                output: output.map(o => new IndicatorRow(o.time, o.values))
-              })
-          )
-        )
-    );
-
-    // добавить сигналы и изменение баланса
-    const advices = await BacktestEngine.getAdvices({
-      strategyFunction: new Function("indicator", strategyCode),
-      indicator: indicators[0]
-    });
-
-    // сделки
-    // перебор по советам
-    // при изменении совета происходит сделка
-    const trades: Trade[] = [];
-    let positionOpen = false; // изначально закрыта
-    let stopLossPrice;
-    let advice;
-
-    for (const { time, close } of candles) {
-      // позиция закрыта или открыта
-      if (!positionOpen) {
-        // если позиция закрыта, то ожидается сигнал на покупку
-        advice = advices.find(e => e.time === time);
-        if (advice && advice.value === 1) {
-          trades.push(
-            new Trade({
-              time,
-              side: "buy",
-              price: close
-            })
-          );
-          if (stoplossEnabled) { stopLossPrice = close * stopLossLevel; }
-          positionOpen = true;
-        }
-      } else {
-        // если позиция открыта, то ожидается сигнал на продажу или стоп-лосс
-        if (stoplossEnabled && close < stopLossPrice) {
-          trades.push(
-            new Trade({
-              time,
-              side: "sell",
-              price: stopLossPrice
-            })
-          );
-          positionOpen = false;
-        } else {
-          advice = advices.find(e => e.time === time);
-          if (advice && advice.value === -1) {
-            trades.push(
-              new Trade({
-                time,
-                side: "sell",
-                price: close
-              })
-            );
-            positionOpen = false;
-          }
-        }
-      }
-    }
-
-    // пройти по всем свечам
-    // при наличии сделки менять баланс
-    let prevBalanceItem: BalanceItem = new BalanceItem({
-      time: candles[0].time,
-      currencyAmount: initialBalance,
-      assetAmount: 0,
-      estimateAmount: 0
-    });
-
-    const balance = candles.map(candle => {
-      // если нет сделок - то брать предыдущий
-      // estimate вычислить на основе нового курса
-      // если есть сделка - то переводить
-      const { currencyAmount, assetAmount } = prevBalanceItem;
-      const { time, close } = candle;
-      const balanceItem: BalanceItem = new BalanceItem({ time });
-      const trade = trades.find(e => e.time === time);
-      if (trade) {
-        const { price } = trade;
-        if (trade.side === "buy") {
-          balanceItem.currencyAmount = 0;
-          balanceItem.assetAmount = (currencyAmount * (1 - fee)) / price;
-          balanceItem.estimateAmount = currencyAmount * (1 - fee);
-        } else {
-          balanceItem.assetAmount = 0;
-          balanceItem.currencyAmount = assetAmount * price * (1 - fee);
-          balanceItem.estimateAmount = assetAmount * price * (1 - fee);
-        }
-      } else {
-        Object.assign(balanceItem, {
-          currencyAmount,
-          assetAmount,
-          estimateAmount: currencyAmount || assetAmount * close * (1 - fee)
-        });
-      }
-      prevBalanceItem = balanceItem;
-      return balanceItem;
-    });
-
-    const finalBalance = balance[balance.length - 1].estimateAmount;
-    const profit = finalBalance - initialBalance;
-    const backtestResult = profit / initialBalance;
-
-    return new BacktestOutput({
-      finalBalance,
-      profit,
-      result: backtestResult,
-      candles,
-      indicators,
-      advices,
-      trades,
-      balance
-    });
   }
 }
