@@ -65,9 +65,6 @@ export class Backtest {
   @Edm.Double
   public profit: number;
 
-  @Edm.Double
-  public result: number;
-
   @Edm.EntityType(Edm.ForwardRef(() => Exchange))
   public Exchange: Exchange;
 
@@ -236,11 +233,9 @@ export class Backtest {
 
     const finalBalance = balance[balance.length - 1].estimateAmount;
     const profit = finalBalance - initialBalance;
-    const backtestResult = profit / initialBalance;
     const delta = {
       finalBalance,
-      profit,
-      result: backtestResult
+      profit
     };
 
     return (await connect())
