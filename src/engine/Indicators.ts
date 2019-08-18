@@ -4,6 +4,16 @@ import * as tulind from "tulind";
 import { ICandle } from "./Exchange";
 
 export class IndicatorsEngine {
+  public static getStart({
+    name,
+    options
+  }: {
+    name: string;
+    options: number[];
+  }): number {
+    return tulind.indicators[name].start(options);
+  }
+
   public static async getIndicator(
     candles: ICandle[],
     indicator: { name: string; options: number[] }
