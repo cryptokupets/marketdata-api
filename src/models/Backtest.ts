@@ -167,15 +167,19 @@ export class Backtest {
         }
       } else {
         // если позиция открыта, то ожидается сигнал на продажу или стоп-лосс
-        if (stoplossEnabled && close < stopLossPrice) {
-          trades.push(
-            new Trade({
-              time,
-              side: "sell",
-              price: stopLossPrice
-            })
-          );
-          positionOpen = false;
+        if (stoplossEnabled) {
+          if (close < stopLossPrice) {
+            trades.push(
+              new Trade({
+                time,
+                side: "sell",
+                price: stopLossPrice
+              })
+            );
+            positionOpen = false;
+          } else {
+            stopLossPrice = Math.max(stopLossPrice, close * stopLossLevel);
+          }
         } else {
           advice = advices.find(e => e.time === time);
           if (advice && advice.value === -1) {
