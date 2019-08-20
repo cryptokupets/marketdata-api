@@ -33,7 +33,9 @@ export class ExchangeEngine {
     return await (exchanges[exchange] as IMarketDataSource).getSymbols();
   }
 
-  public static async getTimeframes(exchange: string): Promise<string[]> {
+  public static async getTimeframes(
+    exchange: string
+  ): Promise<string[]> {
     return await (exchanges[exchange] as IMarketDataSource).getTimeframes();
   }
 
