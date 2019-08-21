@@ -2,15 +2,15 @@ import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
-import { IndicatorView } from "../models/IndicatorView";
+import { Series } from "../models/Series";
 
-const collectionName = "indicatorView";
+const collectionName = "series";
 
-@odata.type(IndicatorView)
-@Edm.EntitySet("IndicatorView")
-export class IndicatorViewController extends ODataController {
+@odata.type(Series)
+@Edm.EntitySet("Series")
+export class SeriesController extends ODataController {
   @odata.GET
-  public async get(@odata.query query: ODataQuery): Promise<IndicatorView[]> {
+  public async get(@odata.query query: ODataQuery): Promise<Series[]> {
     const db = await connect();
     const mongodbQuery = createQuery(query);
 
@@ -18,7 +18,7 @@ export class IndicatorViewController extends ODataController {
       mongodbQuery.query._id = new ObjectID(mongodbQuery.query._id);
     }
 
-    const result: IndicatorView[] & { inlinecount?: number } =
+    const result: Series[] & { inlinecount?: number } =
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await db
@@ -28,7 +28,7 @@ export class IndicatorViewController extends ODataController {
             .skip(mongodbQuery.skip || 0)
             .limit(mongodbQuery.limit || 0)
             .sort(mongodbQuery.sort)
-            .map(e => new IndicatorView(e))
+            .map(e => new Series(e))
             .toArray();
 
     if (mongodbQuery.inlinecount) {
@@ -45,27 +45,14 @@ export class IndicatorViewController extends ODataController {
   public async getById(
     @odata.key key: string,
     @odata.query query: ODataQuery
-  ): Promise<IndicatorView> {
+  ): Promise<Series> {
     const { projection } = createQuery(query);
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
     const db = await connect();
-    return new IndicatorView(
+    return new Series(
       await db.collection(collectionName).findOne({ _id }, { projection })
     );
-  }
-
-  @odata.POST
-  public async post(
-    @odata.body
-    body: any
-  ): Promise<IndicatorView> {
-    const item = new IndicatorView(body);
-    item.marketDataViewId = new ObjectID(body.marketDataViewId);
-    item._id = (await (await connect())
-      .collection(collectionName)
-      .insertOne(item)).insertedId;
-    return item;
   }
 
   @odata.PATCH
@@ -76,8 +63,8 @@ export class IndicatorViewController extends ODataController {
     if (delta._id) {
       delete delta._id;
     }
-    if (delta.marketDataViewId) {
-      delta.marketDataViewId = new ObjectID(delta.marketDataViewId);
+    if (delta.chartId) {
+      delta.chartId = new ObjectID(delta.chartId);
     }
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);

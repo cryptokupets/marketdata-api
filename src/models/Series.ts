@@ -1,7 +1,7 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
 
-export class IndicatorView {
+export class Series {
   @Edm.Key
   @Edm.Computed
   @Edm.String
@@ -9,10 +9,16 @@ export class IndicatorView {
   public _id: ObjectID;
 
   @Edm.String
-  public name: string;
+  public type: string;
 
   @Edm.String
-  public marketDataViewId: ObjectID;
+  public indicatorName: string;
+
+  @Edm.String
+  public indicatorOptions: string;
+
+  @Edm.String
+  public chartId: ObjectID;
 
   constructor(data: any) {
     Object.assign(this, data);

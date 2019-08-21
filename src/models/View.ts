@@ -1,8 +1,8 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
-import { IndicatorView } from "./IndicatorView";
+import { Chart } from "./Chart";
 
-export class MarketDataView {
+export class View {
   @Edm.Key
   @Edm.Computed
   @Edm.String
@@ -10,13 +10,13 @@ export class MarketDataView {
   public _id: ObjectID;
 
   @Edm.String
-  public assetKey: string;
+  public asset: string;
 
   @Edm.String
-  public currencyKey: string;
+  public currency: string;
 
   @Edm.String
-  public exchangeKey: string;
+  public exchange: string;
 
   @Edm.String
   public timeframe: string;
@@ -27,8 +27,8 @@ export class MarketDataView {
   @Edm.String
   public end: string;
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => IndicatorView)))
-  public Indicators: IndicatorView[];
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Chart)))
+  public Indicators: Chart[];
 
   constructor(data: any) {
     Object.assign(this, data);
