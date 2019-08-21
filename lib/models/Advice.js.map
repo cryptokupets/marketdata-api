@@ -1,1 +1,0 @@
-{"version":3,"file":"Advice.js","sourceRoot":"","sources":["../../src/models/Advice.ts"],"names":[],"mappings":";;;;;;;;AAAA,qDAAsC;AAEtC,MAAa,MAAM;IAOjB,YAAY,EAAE,IAAI,EAAE,KAAK,EAAmC;QAC1D,MAAM,CAAC,MAAM,CAAC,IAAI,EAAE;YAClB,IAAI;YACJ,KAAK;SACN,CAAC,CAAC;IACL,CAAC;CACF;AAXC;IADC,qBAAG,CAAC,MAAM;oCACS;AAGpB;IADC,qBAAG,CAAC,KAAK;qCACW;AALvB,wBAaC"}
