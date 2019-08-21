@@ -1,6 +1,9 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
+import { Asset } from "./Asset";
 import { Chart } from "./Chart";
+import { Currency } from "./Currency";
+import { Timeframe } from "./Timeframe";
 
 export class View {
   @Edm.Key
@@ -26,6 +29,15 @@ export class View {
 
   @Edm.String
   public end: string;
+
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Currency)))
+  public Currencies: Currency[];
+
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Timeframe)))
+  public Timeframes: Timeframe[];
+
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Asset)))
+  public Assets: Asset[];
 
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Chart)))
   public Indicators: Chart[];

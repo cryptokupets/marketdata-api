@@ -1,9 +1,14 @@
+import _ from "lodash";
 import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
+import { ExchangeEngine } from "../engine/Exchange";
+import { Asset } from "../models/Asset";
 import { Chart } from "../models/Chart";
+import { Currency } from "../models/Currency";
 import { Series } from "../models/Series";
+import { Timeframe } from "../models/Timeframe";
 import { View } from "../models/View";
 
 const collectionName = "view";
@@ -48,13 +53,19 @@ export class ViewController extends ODataController {
     @odata.key key: string,
     @odata.query query: ODataQuery
   ): Promise<View> {
-    const { projection } = createQuery(query);
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
     const db = await connect();
-    return new View(
-      await db.collection(collectionName).findOne({ _id }, { projection })
-    );
+    if (key) {
+      const { projection } = createQuery(query);
+      // tslint:disable-next-line: variable-name
+      const _id = new ObjectID(key);
+      return new View(
+        await db.collection(collectionName).findOne({ _id }, { projection })
+      );
+    } else {
+      return new View(
+        (await db.collection(collectionName).find().limit(1).toArray())[0]
+      );
+    }
   }
 
   @odata.POST
@@ -108,18 +119,17 @@ export class ViewController extends ODataController {
     });
     // сразу создаться series
     const db = await connect();
-    chart._id = (await db
-      .collection("chart")
-      .insertOne(chart)).insertedId;
+    chart._id = (await db.collection("chart").insertOne(chart)).insertedId;
 
     const collectionSeries = db.collection("series");
 
-    chart.Series = await Promise.all((Series as Series[]).map(async s => {
-      s.chartId = chart._id;
-      s._id = (await collectionSeries
-        .insertOne(s)).insertedId;
-      return s;
-    }));
+    chart.Series = await Promise.all(
+      (Series as Series[]).map(async s => {
+        s.chartId = chart._id;
+        s._id = (await collectionSeries.insertOne(s)).insertedId;
+        return s;
+      })
+    );
 
     return chart;
   }
@@ -151,5 +161,63 @@ export class ViewController extends ODataController {
         .count(false);
     }
     return indicators;
+  }
+
+  @odata.GET("Currencies")
+  public async getSymbols(@odata.result result: any): Promise<Currency[]> {
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(result._id);
+    const db = await connect();
+    const { exchange } = (await db
+      .collection(collectionName)
+      .findOne({ _id })) as View;
+
+    const mSymbols = _.groupBy(
+      await ExchangeEngine.getSymbols(exchange),
+      e => e.currency
+    );
+    return _.keys(mSymbols).map(k => {
+      return new Currency({
+        key: k,
+        exchangeKey: exchange
+      });
+    });
+  }
+
+  @odata.GET("Timeframes")
+  public async getTimeframes(@odata.result result: any): Promise<Timeframe[]> {
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(result._id);
+    const db = await connect();
+    const { exchange } = (await db
+      .collection(collectionName)
+      .findOne({ _id })) as View;
+
+    return (await ExchangeEngine.getTimeframes(exchange)).map(
+      e => new Timeframe(e)
+    );
+  }
+
+  @odata.GET("Assets")
+  public async getAssets(@odata.result result: any): Promise<Asset[]> {
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(result._id);
+    const db = await connect();
+    const { currency, exchange } = (await db
+      .collection(collectionName)
+      .findOne({ _id })) as View;
+
+    const mSymbols = _.filter(
+      await ExchangeEngine.getSymbols(exchange),
+      e => e.currency === currency
+    );
+    return mSymbols.map(
+      e =>
+        new Asset({
+          key: e.asset,
+          exchangeKey: exchange,
+          currencyKey: currency
+        })
+    );
   }
 }
