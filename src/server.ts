@@ -4,8 +4,8 @@ import { BufferController } from "./controllers/Buffer";
 import { ChartController } from "./controllers/Chart";
 import { CurrencyController } from "./controllers/Currency";
 import { ExchangeController } from "./controllers/Exchange";
+import { MarketDataController } from "./controllers/MarketData";
 import { SeriesController } from "./controllers/Series";
-import { ViewController } from "./controllers/View";
 
 @odata.cors
 @odata.namespace("MarketData")
@@ -14,6 +14,6 @@ import { ViewController } from "./controllers/View";
 @odata.controller(ChartController, true)
 @odata.controller(CurrencyController, true)
 @odata.controller(ExchangeController, true)
-@odata.controller(ViewController, true)
+@odata.controller(MarketDataController, true)
 @odata.controller(SeriesController, true)
 export class MarketDataServer extends ODataServer {}

@@ -5,19 +5,20 @@ import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
 import { ExchangeEngine } from "../engine/Exchange";
 import { Asset } from "../models/Asset";
+import { Candle } from "../models/Candle";
 import { Chart } from "../models/Chart";
 import { Currency } from "../models/Currency";
+import { MarketData } from "../models/MarketData";
 import { Series } from "../models/Series";
 import { Timeframe } from "../models/Timeframe";
-import { View } from "../models/View";
 
-const collectionName = "view";
+const collectionName = "marketData";
 
-@odata.type(View)
-@Edm.EntitySet("View")
-export class ViewController extends ODataController {
+@odata.type(MarketData)
+@Edm.EntitySet("MarketData")
+export class MarketDataController extends ODataController {
   @odata.GET
-  public async get(@odata.query query: ODataQuery): Promise<View[]> {
+  public async get(@odata.query query: ODataQuery): Promise<MarketData[]> {
     const db = await connect();
     const mongodbQuery = createQuery(query);
 
@@ -25,7 +26,7 @@ export class ViewController extends ODataController {
       mongodbQuery.query._id = new ObjectID(mongodbQuery.query._id);
     }
 
-    const result: View[] & { inlinecount?: number } =
+    const result: MarketData[] & { inlinecount?: number } =
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await db
@@ -35,7 +36,7 @@ export class ViewController extends ODataController {
             .skip(mongodbQuery.skip || 0)
             .limit(mongodbQuery.limit || 0)
             .sort(mongodbQuery.sort)
-            .map(e => new View(e))
+            .map(e => new MarketData(e))
             .toArray();
 
     if (mongodbQuery.inlinecount) {
@@ -52,18 +53,22 @@ export class ViewController extends ODataController {
   public async getById(
     @odata.key key: string,
     @odata.query query: ODataQuery
-  ): Promise<View> {
+  ): Promise<MarketData> {
     const db = await connect();
     if (key) {
       const { projection } = createQuery(query);
       // tslint:disable-next-line: variable-name
       const _id = new ObjectID(key);
-      return new View(
+      return new MarketData(
         await db.collection(collectionName).findOne({ _id }, { projection })
       );
     } else {
-      return new View(
-        (await db.collection(collectionName).find().limit(1).toArray())[0]
+      return new MarketData(
+        (await db
+          .collection(collectionName)
+          .find()
+          .limit(1)
+          .toArray())[0]
       );
     }
   }
@@ -72,8 +77,8 @@ export class ViewController extends ODataController {
   public async post(
     @odata.body
     body: any
-  ): Promise<View> {
-    const item = new View(body);
+  ): Promise<MarketData> {
+    const item = new MarketData(body);
     item._id = (await (await connect())
       .collection(collectionName)
       .insertOne(item)).insertedId;
@@ -88,9 +93,17 @@ export class ViewController extends ODataController {
     if (delta._id) {
       delete delta._id;
     }
+    const db = await connect();
     // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-    return (await connect())
+    const _id = key
+      ? new ObjectID(key)
+      : ((await db
+          .collection(collectionName)
+          .find()
+          .limit(1)
+          .toArray())[0] as MarketData)._id;
+
+    return db
       .collection(collectionName)
       .updateOne({ _id }, { $set: delta })
       .then(result => result.modifiedCount);
@@ -136,9 +149,9 @@ export class ViewController extends ODataController {
 
   @odata.GET("Indicators")
   public async getIndicators(
-    @odata.result result: View,
+    @odata.result result: MarketData,
     @odata.query query: ODataQuery
-  ): Promise<View[]> {
+  ): Promise<MarketData[]> {
     const db = await connect();
     const collection = db.collection("chart");
     const mongodbQuery = createQuery(query);
@@ -170,7 +183,7 @@ export class ViewController extends ODataController {
     const db = await connect();
     const { exchange } = (await db
       .collection(collectionName)
-      .findOne({ _id })) as View;
+      .findOne({ _id })) as MarketData;
 
     const mSymbols = _.groupBy(
       await ExchangeEngine.getSymbols(exchange),
@@ -191,7 +204,7 @@ export class ViewController extends ODataController {
     const db = await connect();
     const { exchange } = (await db
       .collection(collectionName)
-      .findOne({ _id })) as View;
+      .findOne({ _id })) as MarketData;
 
     return (await ExchangeEngine.getTimeframes(exchange)).map(
       e => new Timeframe(e)
@@ -205,7 +218,7 @@ export class ViewController extends ODataController {
     const db = await connect();
     const { currency, exchange } = (await db
       .collection(collectionName)
-      .findOne({ _id })) as View;
+      .findOne({ _id })) as MarketData;
 
     const mSymbols = _.filter(
       await ExchangeEngine.getSymbols(exchange),
@@ -219,5 +232,16 @@ export class ViewController extends ODataController {
           currencyKey: currency
         })
     );
+  }
+
+  @odata.GET("Candles")
+  public async getCandles(@odata.result result: any): Promise<Candle[]> {
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(result._id);
+    const db = await connect();
+    const options = (await db
+      .collection(collectionName)
+      .findOne({ _id })) as MarketData;
+    return ExchangeEngine.getCandles(options);
   }
 }
