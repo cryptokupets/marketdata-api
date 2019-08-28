@@ -121,8 +121,8 @@ export class Backtest {
           output =>
             new Indicator({
               name: input.name,
-              options: input.options,
-              output: output.map(o => new IndicatorRow(o.time, o.values))
+              options: JSON.stringify(input.options),
+              Output: output.map(o => new IndicatorRow(o.time, o.values))
             })
         )
       )
@@ -130,10 +130,7 @@ export class Backtest {
 
     // добавить сигналы и изменение баланса
     const advices = await BacktestEngine.getAdvices({
-      strategyFunction: new Function(
-        "indicators",
-        strategyCode
-      ),
+      strategyFunction: new Function("indicators", strategyCode),
       candles,
       indicators,
       parameters: JSON.parse(strategyParameters) as number[]

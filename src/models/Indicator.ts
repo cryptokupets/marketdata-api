@@ -5,21 +5,13 @@ export class Indicator {
   @Edm.String
   public name: string;
 
-  @Edm.Collection(Edm.Double)
-  public options: number[];
+  @Edm.String
+  public options: string;
 
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => IndicatorRow)))
-  public output: IndicatorRow[];
+  public Output: IndicatorRow[];
 
-  constructor({
-    name,
-    options,
-    output
-  }: {
-    name: string;
-    options: number[];
-    output: IndicatorRow[];
-  }) {
-    Object.assign(this, { name, options, output });
+  constructor(data: any) {
+    Object.assign(this, data);
   }
 }

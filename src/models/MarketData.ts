@@ -1,12 +1,19 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
-import { Asset } from "./Asset";
 import { Candle } from "./Candle";
-import { Chart } from "./Chart";
-import { Currency } from "./Currency";
-import { Timeframe } from "./Timeframe";
+import { Exchange } from "./Exchange";
+import { IndicatorView } from "./IndicatorView";
 
-export class MarketData {
+export interface IMarketData {
+  exchange: string;
+  currency: string;
+  asset: string;
+  timeframe: string;
+  start: string;
+  end: string;
+}
+
+export class MarketData implements IMarketData {
   @Edm.Key
   @Edm.Computed
   @Edm.String
@@ -31,20 +38,14 @@ export class MarketData {
   @Edm.String
   public end: string;
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Currency)))
-  public Currencies: Currency[];
-
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Timeframe)))
-  public Timeframes: Timeframe[];
-
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Asset)))
-  public Assets: Asset[];
-
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Chart)))
-  public Indicators: Chart[];
+  @Edm.EntityType(Edm.ForwardRef(() => Exchange))
+  public Exchange: Exchange;
 
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Candle)))
   public Candles: Candle[];
+
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => IndicatorView)))
+  public Indicators: IndicatorView[];
 
   constructor(data: any) {
     Object.assign(this, data);
