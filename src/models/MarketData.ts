@@ -8,7 +8,7 @@ export interface IMarketData {
   exchange: string;
   currency: string;
   asset: string;
-  timeframe: string;
+  period: number;
   start: string;
   end: string;
 }
@@ -29,8 +29,8 @@ export class MarketData implements IMarketData {
   @Edm.String
   public exchange: string;
 
-  @Edm.String
-  public timeframe: string;
+  @Edm.Double
+  public period: number;
 
   @Edm.String
   public start: string;

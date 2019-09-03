@@ -19,7 +19,7 @@ export class Exchange {
   public Currencies: Currency[];
 
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Timeframe)))
-  public Timeframes: Timeframe[];
+  public Periods: Timeframe[];
 
   constructor(key: string) {
     Object.assign(this, { key });
@@ -30,7 +30,7 @@ export class Exchange {
   public async getCandles(
     @Edm.String currency: string,
     @Edm.String asset: string,
-    @Edm.String timeframe: string,
+    @Edm.String period: number,
     @Edm.String start: string,
     @Edm.String end: string,
     @odata.body body: any,
@@ -39,7 +39,7 @@ export class Exchange {
     const options = body || {
       currency,
       asset,
-      timeframe,
+      period,
       start,
       end
     };

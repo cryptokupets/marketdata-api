@@ -33,8 +33,8 @@ export class ExchangeController extends ODataController {
     });
   }
 
-  @odata.GET("Timeframes")
-  public async getTimeframes(
+  @odata.GET("Periods")
+  public async getPeriods(
     @odata.result result: any
   ): Promise<Timeframe[]> {
     const { key } = result;

@@ -7,11 +7,11 @@ const exchanges: any = {
 
 export interface IMarketDataSource {
   getSymbols(): Promise<Array<{ currency: string; asset: string }>>;
-  getTimeframes(): Promise<string[]>;
+  getTimeframes(): Promise<number[]>;
   getCandles(options: {
     currency: string;
     asset: string;
-    timeframe: string;
+    period: number;
     start: string;
     end: string;
   }): Promise<ICandle[]>;
@@ -33,9 +33,7 @@ export class ExchangeEngine {
     return await (exchanges[exchange] as IMarketDataSource).getSymbols();
   }
 
-  public static async getTimeframes(
-    exchange: string
-  ): Promise<string[]> {
+  public static async getTimeframes(exchange: string): Promise<number[]> {
     return await (exchanges[exchange] as IMarketDataSource).getTimeframes();
   }
 
@@ -47,28 +45,21 @@ export class ExchangeEngine {
     return exchanges[exchange] as IMarketDataSource;
   }
 
-  public static timeframeToMinutes(timeframe: string): number {
-    const d: any = {};
-    d[timeframe.slice(0, 1).toLowerCase()] = +timeframe.slice(1);
-    return moment.duration(d).asMinutes();
-  }
-
   public static async getCandles({
     exchange,
     currency,
     asset,
-    timeframe,
+    period,
     start,
     end
   }: {
     exchange: string;
     currency: string;
     asset: string;
-    timeframe: string;
+    period: number;
     start: string;
     end: string;
   }): Promise<ICandle[]> {
-    const timeframeMinutes = ExchangeEngine.timeframeToMinutes(timeframe);
     let startMoment = moment.utc(start);
 
     const candles: ICandle[] = [];
@@ -78,7 +69,7 @@ export class ExchangeEngine {
       const response = await exchanges[exchange].getCandles({
         currency,
         asset,
-        timeframe,
+        period,
         start: startMoment.toISOString(),
         end
       });
@@ -90,7 +81,7 @@ export class ExchangeEngine {
         }
         startMoment = moment
           .utc(response[responseLength - 1].time)
-          .add(timeframeMinutes, "m");
+          .add(period, "m");
       }
     } while (responseLength && startMoment.isSameOrBefore(moment.utc(end)));
     return candles;
