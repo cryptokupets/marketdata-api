@@ -1,6 +1,7 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
 import { Indicator } from "./Indicator";
+import { IndicatorRow } from "./IndicatorRow";
 import { MarketData } from "./MarketData";
 
 export class IndicatorView extends Indicator {
@@ -18,4 +19,7 @@ export class IndicatorView extends Indicator {
 
   @Edm.EntityType(Edm.ForwardRef(() => MarketData))
   public Parent: MarketData;
+
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => IndicatorRow)))
+  public Output: IndicatorRow[];
 }
