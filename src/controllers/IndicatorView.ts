@@ -5,7 +5,6 @@ import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
 import { ExchangeEngine } from "../engine/Exchange";
 import { IndicatorsEngine } from "../engine/Indicators";
-import { Indicator } from "../models/Indicator";
 import { IndicatorRow } from "../models/IndicatorRow";
 import { IndicatorView } from "../models/IndicatorView";
 import { MarketData } from "../models/MarketData";
@@ -123,5 +122,19 @@ export class IndicatorViewController extends ODataController {
       name,
       options: JSON.parse(options)
     })).map(o => new IndicatorRow(o.time, o.values));
+  }
+
+  @odata.GET("Parent")
+  public async getParent(@odata.result result: any): Promise<MarketData> {
+    // tslint:disable-next-line: variable-name
+    const _id = new ObjectID(result._id);
+    const db = await connect();
+    const { parentId } = (await db
+      .collection(collectionName)
+      .findOne({ _id })) as IndicatorView;
+
+    return (await db
+      .collection("marketData")
+      .findOne({ _id: parentId })) as MarketData;
   }
 }

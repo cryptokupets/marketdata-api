@@ -1,13 +1,7 @@
 import _ from "lodash";
-import moment = require("moment");
 import { Edm, odata } from "odata-v4-server";
 import { ExchangeEngine, ICandle } from "../engine/Exchange";
-import { IndicatorsEngine } from "../engine/Indicators";
-import { Indicator } from "../models/Indicator";
-import { IndicatorRow } from "../models/IndicatorRow";
-import { Candle } from "./Candle";
 import { Currency } from "./Currency";
-import { MarketData } from "./MarketData";
 import { Timeframe } from "./Timeframe";
 
 export class Exchange {

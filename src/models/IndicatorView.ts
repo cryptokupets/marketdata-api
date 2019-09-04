@@ -1,6 +1,7 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
 import { Indicator } from "./Indicator";
+import { MarketData } from "./MarketData";
 
 export class IndicatorView extends Indicator {
   @Edm.Key
@@ -14,4 +15,7 @@ export class IndicatorView extends Indicator {
 
   @Edm.String
   public type: string; // тип диаграммы
+
+  @Edm.EntityType(Edm.ForwardRef(() => MarketData))
+  public Parent: MarketData;
 }
