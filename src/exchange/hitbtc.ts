@@ -1,6 +1,6 @@
 import moment from "moment";
 import * as request from "request-promise-native";
-import { ExchangeEngine, ICandle, IMarketDataSource } from "../engine/Exchange";
+import { ICandle, IMarketDataSource } from "../engine/Exchange";
 
 const BASE_URL = "https://api.hitbtc.com/api/2/";
 
@@ -30,32 +30,32 @@ export class Hitbtc implements IMarketDataSource {
 
   public getTimeframe(period: number): string {
     let timeframe;
-    switch (period) {
-      case 1:
+    switch ("" + period) {
+      case "1":
         timeframe = "M1";
         break;
 
-      case 3:
+      case "3":
         timeframe = "M3";
         break;
 
-      case 5:
+      case "5":
         timeframe = "M5";
         break;
 
-      case 15:
+      case "15":
         timeframe = "M15";
         break;
 
-      case 30:
+      case "30":
         timeframe = "M30";
         break;
 
-      case 60:
+      case "60":
         timeframe = "H1";
         break;
 
-      case 240:
+      case "240":
         timeframe = "H4";
         break;
 
@@ -63,7 +63,6 @@ export class Hitbtc implements IMarketDataSource {
         timeframe = "M1";
         break;
     }
-
     return timeframe;
   }
 
