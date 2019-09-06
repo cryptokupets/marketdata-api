@@ -29,8 +29,8 @@ export class Backtest {
   @Edm.String
   public assetKey: string;
 
-  @Edm.String
-  public timeframe: string;
+  @Edm.Double
+  public period: number;
 
   @Edm.String
   public start: string;
@@ -88,7 +88,7 @@ export class Backtest {
       assetKey,
       currencyKey,
       exchangeKey,
-      timeframe,
+      period,
       start,
       end,
       initialBalance,
@@ -106,7 +106,7 @@ export class Backtest {
       exchange: exchangeKey,
       currency: currencyKey,
       asset: assetKey,
-      timeframe,
+      period,
       start,
       end
     });
@@ -121,8 +121,8 @@ export class Backtest {
           output =>
             new Indicator({
               name: input.name,
-              options: input.options,
-              output: output.map(o => new IndicatorRow(o.time, o.values))
+              options: JSON.stringify(input.options),
+              Output: output.map(o => new IndicatorRow(o.time, o.values))
             })
         )
       )
@@ -130,10 +130,7 @@ export class Backtest {
 
     // добавить сигналы и изменение баланса
     const advices = await BacktestEngine.getAdvices({
-      strategyFunction: new Function(
-        "indicators",
-        strategyCode
-      ),
+      strategyFunction: new Function("indicators", strategyCode),
       candles,
       indicators,
       parameters: JSON.parse(strategyParameters) as number[]
