@@ -1,4 +1,5 @@
 import _ from "lodash";
+import moment from "moment";
 import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
@@ -112,11 +113,33 @@ export class IndicatorViewController extends ODataController {
       .collection(collectionName)
       .findOne({ _id })) as IndicatorView;
 
-    const marketData = (await db
+    const {
+      exchange,
+      currency,
+      asset,
+      period,
+      start,
+      end
+    } = (await db
       .collection("marketData")
       .findOne({ _id: parentId })) as MarketData;
 
-    const candles = await ExchangeEngine.getCandles(marketData);
+    const candles = await ExchangeEngine.getCandles({
+      exchange,
+      currency,
+      asset,
+      period,
+      start: moment.utc(start)
+        .add(
+          -IndicatorsEngine.getStart({
+            name,
+            options: JSON.parse(options)
+          }) * period,
+          "m"
+        )
+        .toISOString(),
+      end
+    });
 
     return (await IndicatorsEngine.getIndicator(candles, {
       name,
