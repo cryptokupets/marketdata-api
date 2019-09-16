@@ -20,10 +20,7 @@ cron.schedule("1 * * * * *", async () => {
       .add(-1, "m")
       .toISOString()
   });
-  console.log(options);
   const candles = await ExchangeEngine.getCandles(options);
-  console.log(candles);
-  // UNDONE
   parentPort.postMessage(JSON.stringify(candles));
   lastUpdate = moment.utc(
     _.maxBy(candles, e => moment.utc(e.time).unix()).time
