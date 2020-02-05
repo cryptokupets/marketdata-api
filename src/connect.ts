@@ -2,7 +2,7 @@ import { Db, MongoClient } from "mongodb";
 
 let connect: MongoClient;
 
-export default async function(): Promise<Db> {
+export default async function (): Promise<Db> {
   const uri = process.env.MONGODB_URI;
   const dbName = process.env.MONGODB_DBNAME;
 

@@ -25,14 +25,14 @@ export class MarketDataController extends ODataController {
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await db
-            .collection(collectionName)
-            .find(mongodbQuery.query)
-            .project(mongodbQuery.projection)
-            .skip(mongodbQuery.skip || 0)
-            .limit(mongodbQuery.limit || 0)
-            .sort(mongodbQuery.sort)
-            .map(e => new MarketData(e))
-            .toArray();
+          .collection(collectionName)
+          .find(mongodbQuery.query)
+          .project(mongodbQuery.projection)
+          .skip(mongodbQuery.skip || 0)
+          .limit(mongodbQuery.limit || 0)
+          .sort(mongodbQuery.sort)
+          .map(e => new MarketData(e))
+          .toArray();
 
     if (mongodbQuery.inlinecount) {
       result.inlinecount = await db
@@ -109,12 +109,12 @@ export class MarketDataController extends ODataController {
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await collection
-            .find({ $and: [{ parentId }, mongodbQuery.query] })
-            .project(mongodbQuery.projection)
-            .skip(mongodbQuery.skip || 0)
-            .limit(mongodbQuery.limit || 0)
-            .sort(mongodbQuery.sort)
-            .toArray();
+          .find({ $and: [{ parentId }, mongodbQuery.query] })
+          .project(mongodbQuery.projection)
+          .skip(mongodbQuery.skip || 0)
+          .limit(mongodbQuery.limit || 0)
+          .sort(mongodbQuery.sort)
+          .toArray();
     if (mongodbQuery.inlinecount) {
       ranges.inlinecount = await collection
         .find({ $and: [{ parentId }, mongodbQuery.query] })
@@ -137,12 +137,12 @@ export class MarketDataController extends ODataController {
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await collection
-            .find({ $and: [{ parentId }, mongodbQuery.query] })
-            .project(mongodbQuery.projection)
-            .skip(mongodbQuery.skip || 0)
-            .limit(mongodbQuery.limit || 0)
-            .sort(mongodbQuery.sort)
-            .toArray();
+          .find({ $and: [{ parentId }, mongodbQuery.query] })
+          .project(mongodbQuery.projection)
+          .skip(mongodbQuery.skip || 0)
+          .limit(mongodbQuery.limit || 0)
+          .sort(mongodbQuery.sort)
+          .toArray();
     if (mongodbQuery.inlinecount) {
       candles.inlinecount = await collection
         .find({ $and: [{ parentId }, mongodbQuery.query] })

@@ -1,7 +1,7 @@
+import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
-import { ICandle } from "../engine/Exchange";
 
-export class Candle implements ICandle {
+export class Candle {
   @Edm.Key
   @Edm.Computed
   @Edm.String

@@ -12,11 +12,15 @@ export class MarketData {
 
   @Edm.Key
   @Edm.String
-  public asset: string;
+  public exchange: string;
 
   @Edm.Key
   @Edm.String
   public currency: string;
+
+  @Edm.Key
+  @Edm.String
+  public asset: string;
 
   @Edm.Key
   @Edm.Double
@@ -27,6 +31,14 @@ export class MarketData {
 
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => DateRange)))
   public Ranges: DateRange[];
+  // заменить на MarketDataImport
+  // MarketData вообще не хранить в БД
+  // с MarketDataImport работу максимально упростить, для начала просто загружать каждый раз
+  // затем проверять на простое совпадение
+  // затем на включение
+  // добавить операцию расширить до новых дат
+  // затем остальные операции, объединить, поглотить, соединить, но сервер по идее может эту логику не выполнять
+  // главная задача сервера проинформировать пользователя о наличии данных и обеспечить целостность
 
   constructor(data: any) {
     Object.assign(this, data);

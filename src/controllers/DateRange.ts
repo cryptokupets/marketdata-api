@@ -9,7 +9,7 @@ const collectionName = "dateRange";
 
 @odata.type(DateRange)
 @Edm.EntitySet("DateRange")
-export class CandleController extends ODataController {
+export class DateRangeController extends ODataController {
   @odata.GET
   public async get(@odata.query query: ODataQuery): Promise<DateRange[]> {
     const db = await connect();
@@ -23,14 +23,14 @@ export class CandleController extends ODataController {
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await db
-            .collection(collectionName)
-            .find(mongodbQuery.query)
-            .project(mongodbQuery.projection)
-            .skip(mongodbQuery.skip || 0)
-            .limit(mongodbQuery.limit || 0)
-            .sort(mongodbQuery.sort)
-            .map(e => new DateRange(e))
-            .toArray();
+          .collection(collectionName)
+          .find(mongodbQuery.query)
+          .project(mongodbQuery.projection)
+          .skip(mongodbQuery.skip || 0)
+          .limit(mongodbQuery.limit || 0)
+          .sort(mongodbQuery.sort)
+          .map(e => new DateRange(e))
+          .toArray();
 
     if (mongodbQuery.inlinecount) {
       result.inlinecount = await db
@@ -56,12 +56,19 @@ export class CandleController extends ODataController {
     );
   }
 
-  @odata.POST
+  @odata.POST // перенести в MarketData
   public async post(
     @odata.body
     body: any
   ): Promise<DateRange> {
+    if (body.parentId) {
+      body.parentId = new ObjectID(body.parentId);
+    }
+
+    body.status = false;
+
     const item = new DateRange(body);
+
     item._id = (await (await connect())
       .collection(collectionName)
       .insertOne(item)).insertedId;
@@ -78,11 +85,11 @@ export class CandleController extends ODataController {
     }
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
-    
+
     if (delta.parentId) {
       delta.parentId = new ObjectID(delta.parentId);
     }
-    
+
     return (await connect())
       .collection(collectionName)
       .updateOne({ _id }, { $set: delta })

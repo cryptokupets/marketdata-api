@@ -8,4 +8,4 @@ import { MarketDataController } from "./controllers/MarketData";
 @odata.controller(CandleController, true)
 @odata.controller(DateRangeController, true)
 @odata.controller(MarketDataController, true)
-export class MarketDataServer extends ODataServer {}
+export class MarketDataServer extends ODataServer { }

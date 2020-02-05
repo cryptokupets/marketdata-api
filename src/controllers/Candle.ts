@@ -23,14 +23,14 @@ export class CandleController extends ODataController {
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await db
-            .collection(collectionName)
-            .find(mongodbQuery.query)
-            .project(mongodbQuery.projection)
-            .skip(mongodbQuery.skip || 0)
-            .limit(mongodbQuery.limit || 0)
-            .sort(mongodbQuery.sort)
-            .map(e => new Candle(e))
-            .toArray();
+          .collection(collectionName)
+          .find(mongodbQuery.query)
+          .project(mongodbQuery.projection)
+          .skip(mongodbQuery.skip || 0)
+          .limit(mongodbQuery.limit || 0)
+          .sort(mongodbQuery.sort)
+          .map(e => new Candle(e))
+          .toArray();
 
     if (mongodbQuery.inlinecount) {
       result.inlinecount = await db
@@ -78,11 +78,11 @@ export class CandleController extends ODataController {
     }
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
-    
+
     if (delta.parentId) {
       delta.parentId = new ObjectID(delta.parentId);
     }
-    
+
     return (await connect())
       .collection(collectionName)
       .updateOne({ _id }, { $set: delta })
