@@ -1,6 +1,11 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server;
 import { streamCandle } from "get-candles";
+import es from "event-stream";
+import * as Moment from 'moment';
+import { extendMoment } from 'moment-range';
+
+const moment = extendMoment(Moment);
 
 const collectionName = "dateRange";
 
