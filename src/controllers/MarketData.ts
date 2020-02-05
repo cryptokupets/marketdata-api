@@ -3,10 +3,8 @@ import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
-import { ExchangeEngine } from "../engine/Exchange";
 import { Candle } from "../models/Candle";
-import { Exchange } from "../models/Exchange";
-import { IndicatorView } from "../models/IndicatorView";
+import { DateRange } from "../models/DateRange";
 import { MarketData } from "../models/MarketData";
 
 const collectionName = "marketData";
@@ -98,28 +96,16 @@ export class MarketDataController extends ODataController {
       .then(result => result.deletedCount);
   }
 
-  @odata.GET("Exchange")
-  public async getExchange(@odata.result result: any): Promise<Exchange> {
-    const { _id: key } = result;
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-    const db = await connect();
-    const { exchange } = new MarketData(
-      await db.collection(collectionName).findOne({ _id })
-    );
-    return new Exchange(exchange);
-  }
-
-  @odata.GET("Indicators")
-  public async getIndicators(
+  @odata.GET("Ranges")
+  public async getRanges(
     @odata.result result: MarketData,
     @odata.query query: ODataQuery
-  ): Promise<IndicatorView[]> {
+  ): Promise<DateRange[]> {
     const db = await connect();
-    const collection = db.collection("indicatorView");
+    const collection = db.collection("dateRange");
     const mongodbQuery = createQuery(query);
     const parentId = new ObjectID(result._id);
-    const indicators: any =
+    const ranges: any =
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await collection
@@ -130,22 +116,39 @@ export class MarketDataController extends ODataController {
             .sort(mongodbQuery.sort)
             .toArray();
     if (mongodbQuery.inlinecount) {
-      indicators.inlinecount = await collection
+      ranges.inlinecount = await collection
         .find({ $and: [{ parentId }, mongodbQuery.query] })
         .project(mongodbQuery.projection)
         .count(false);
     }
-    return indicators;
+    return ranges;
   }
 
   @odata.GET("Candles")
-  public async getCandles(@odata.result result: any): Promise<Candle[]> {
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(result._id);
+  public async getCandles(
+    @odata.result result: MarketData,
+    @odata.query query: ODataQuery
+  ): Promise<Candle[]> {
     const db = await connect();
-    const options = (await db
-      .collection(collectionName)
-      .findOne({ _id })) as MarketData;
-    return ExchangeEngine.getCandles(options);
+    const collection = db.collection("candle");
+    const mongodbQuery = createQuery(query);
+    const parentId = new ObjectID(result._id);
+    const candles: any =
+      typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
+        ? []
+        : await collection
+            .find({ $and: [{ parentId }, mongodbQuery.query] })
+            .project(mongodbQuery.projection)
+            .skip(mongodbQuery.skip || 0)
+            .limit(mongodbQuery.limit || 0)
+            .sort(mongodbQuery.sort)
+            .toArray();
+    if (mongodbQuery.inlinecount) {
+      candles.inlinecount = await collection
+        .find({ $and: [{ parentId }, mongodbQuery.query] })
+        .project(mongodbQuery.projection)
+        .count(false);
+    }
+    return candles;
   }
 }

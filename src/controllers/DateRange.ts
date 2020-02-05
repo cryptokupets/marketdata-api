@@ -1,17 +1,17 @@
+import _ from "lodash";
 import { ObjectID } from "mongodb";
 import { createQuery } from "odata-v4-mongodb";
 import { Edm, odata, ODataController, ODataQuery } from "odata-v4-server";
 import connect from "../connect";
-import { Backtest } from "../models/Backtest";
-import { Exchange } from "../models/Exchange";
+import { DateRange } from "../models/DateRange";
 
-const collectionName = "backtest";
+const collectionName = "dateRange";
 
-@odata.type(Backtest)
-@Edm.EntitySet("Backtest")
-export class BacktestController extends ODataController {
+@odata.type(DateRange)
+@Edm.EntitySet("DateRange")
+export class CandleController extends ODataController {
   @odata.GET
-  public async get(@odata.query query: ODataQuery): Promise<Backtest[]> {
+  public async get(@odata.query query: ODataQuery): Promise<DateRange[]> {
     const db = await connect();
     const mongodbQuery = createQuery(query);
 
@@ -19,7 +19,7 @@ export class BacktestController extends ODataController {
       mongodbQuery.query._id = new ObjectID(mongodbQuery.query._id);
     }
 
-    const result: Backtest[] & { inlinecount?: number } =
+    const result: DateRange[] & { inlinecount?: number } =
       typeof mongodbQuery.limit === "number" && mongodbQuery.limit === 0
         ? []
         : await db
@@ -29,7 +29,7 @@ export class BacktestController extends ODataController {
             .skip(mongodbQuery.skip || 0)
             .limit(mongodbQuery.limit || 0)
             .sort(mongodbQuery.sort)
-            .map(e => new Backtest(e))
+            .map(e => new DateRange(e))
             .toArray();
 
     if (mongodbQuery.inlinecount) {
@@ -46,12 +46,12 @@ export class BacktestController extends ODataController {
   public async getById(
     @odata.key key: string,
     @odata.query query: ODataQuery
-  ): Promise<Backtest> {
+  ): Promise<DateRange> {
+    const db = await connect();
     const { projection } = createQuery(query);
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
-    const db = await connect();
-    return new Backtest(
+    return new DateRange(
       await db.collection(collectionName).findOne({ _id }, { projection })
     );
   }
@@ -60,12 +60,12 @@ export class BacktestController extends ODataController {
   public async post(
     @odata.body
     body: any
-  ): Promise<Backtest> {
-    const backtest = new Backtest(body);
-    backtest._id = (await (await connect())
+  ): Promise<DateRange> {
+    const item = new DateRange(body);
+    item._id = (await (await connect())
       .collection(collectionName)
-      .insertOne(backtest)).insertedId;
-    return backtest;
+      .insertOne(item)).insertedId;
+    return item;
   }
 
   @odata.PATCH
@@ -78,6 +78,11 @@ export class BacktestController extends ODataController {
     }
     // tslint:disable-next-line: variable-name
     const _id = new ObjectID(key);
+    
+    if (delta.parentId) {
+      delta.parentId = new ObjectID(delta.parentId);
+    }
+    
     return (await connect())
       .collection(collectionName)
       .updateOne({ _id }, { $set: delta })
@@ -92,17 +97,5 @@ export class BacktestController extends ODataController {
       .collection(collectionName)
       .deleteOne({ _id })
       .then(result => result.deletedCount);
-  }
-
-  @odata.GET("Exchange")
-  public async getExchange(@odata.result result: any): Promise<Exchange> {
-    const { _id: key } = result;
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-    const db = await connect();
-    const { exchangeKey } = new Backtest(
-      await db.collection(collectionName).findOne({ _id })
-    );
-    return new Exchange(exchangeKey);
   }
 }

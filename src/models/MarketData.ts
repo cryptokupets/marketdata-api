@@ -1,51 +1,32 @@
 import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
 import { Candle } from "./Candle";
-import { Exchange } from "./Exchange";
-import { IndicatorView } from "./IndicatorView";
+import { DateRange } from "./DateRange";
 
-export interface IMarketData {
-  exchange: string;
-  currency: string;
-  asset: string;
-  period: number;
-  start: string;
-  end: string;
-}
-
-export class MarketData implements IMarketData {
+export class MarketData {
   @Edm.Key
   @Edm.Computed
   @Edm.String
   // tslint:disable-next-line: variable-name
   public _id: ObjectID;
 
+  @Edm.Key
   @Edm.String
   public asset: string;
 
+  @Edm.Key
   @Edm.String
   public currency: string;
 
-  @Edm.String
-  public exchange: string;
-
+  @Edm.Key
   @Edm.Double
   public period: number;
-
-  @Edm.String
-  public start: string;
-
-  @Edm.String
-  public end: string;
-
-  @Edm.EntityType(Edm.ForwardRef(() => Exchange))
-  public Exchange: Exchange;
 
   @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => Candle)))
   public Candles: Candle[];
 
-  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => IndicatorView)))
-  public Indicators: IndicatorView[];
+  @Edm.Collection(Edm.EntityType(Edm.ForwardRef(() => DateRange)))
+  public Ranges: DateRange[];
 
   constructor(data: any) {
     Object.assign(this, data);

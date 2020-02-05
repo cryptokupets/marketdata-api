@@ -1,6 +1,6 @@
 {
   "name": "marketdata-api",
-  "version": "1.0.18",
+  "version": "1.1.0",
   "description": "OData server. Get market data from crypto exchanges open REST API.",
   "repository": {
     "type": "git",
@@ -45,8 +45,7 @@
     "odata-v4-server": "^0.2.13",
     "patch-package": "^6.1.2",
     "request": "^2.88.0",
-    "request-promise-native": "^1.0.7",
-    "tulind": "^0.8.18"
+    "request-promise-native": "^1.0.7"
   },
   "devDependencies": {
     "@types/express": "^4.17.1",
