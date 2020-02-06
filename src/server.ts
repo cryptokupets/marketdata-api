@@ -14,6 +14,7 @@ export class MarketDataServer extends ODataServer {
     const db = await connect();
     const collection = db.collection("candle");
     return new Promise(resolve => {
+      // UNDONE сначала удалить
       const rs = streamCandle({
         exchange,
         currency,
@@ -23,8 +24,15 @@ export class MarketDataServer extends ODataServer {
         end
       }).pipe(
         es.map((chunk: any, next: any) => {
-          const candle: any = JSON.parse(chunk);
-          collection.insertMany(candle, next);
+          const candles: any[] = (JSON.parse(chunk) as any[]).map(e =>
+            Object.assign(e, {
+              exchange,
+              currency,
+              asset,
+              period
+            })
+          );
+          collection.insertMany(candles, next);
         })
       );
 
