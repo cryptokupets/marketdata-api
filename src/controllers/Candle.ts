@@ -42,60 +42,36 @@ export class CandleController extends ODataController {
     return result;
   }
 
-  @odata.GET
-  public async getById(
-    @odata.key key: string,
-    @odata.query query: ODataQuery
-  ): Promise<Candle> {
+  @Edm.Action
+  async import( // стоит ли через body?
+    @Edm.String exchange: string,
+    @Edm.String currency: string,
+    @Edm.String asset: string,
+    @Edm.Double period: number,
+    @Edm.String begin: string,
+    @Edm.String end: string
+  ) {
+    // удалить все существующие данные этого периода
+    // загрузить новые
     const db = await connect();
-    const { projection } = createQuery(query);
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-    return new Candle(
-      await db.collection(collectionName).findOne({ _id }, { projection })
-    );
-  }
+    const collection = db.collection(collectionName);
+    return new Promise(resolve => {
+        const rs = streamCandle({
+          exchange,
+          currency,
+          asset,
+          period,
+          start,
+          end
+        }).pipe(es.map((chunk: any, next: any) => {
+            // добавлять с пропусками?
+            // как понять что данные полные? только хранить историю успешшных импортов
+          const candle: any = JSON.parse(chunk);
+          collection.insertOne(candle, next);
+        }));
 
-  @odata.POST
-  public async post(
-    @odata.body
-    body: any
-  ): Promise<Candle> {
-    const item = new Candle(body);
-    item._id = (await (await connect())
-      .collection(collectionName)
-      .insertOne(item)).insertedId;
-    return item;
-  }
+        rs.on("end", () => resolve());
+      });
 
-  @odata.PATCH
-  public async patch(
-    @odata.key key: string,
-    @odata.body delta: any
-  ): Promise<number> {
-    if (delta._id) {
-      delete delta._id;
-    }
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-
-    if (delta.parentId) {
-      delta.parentId = new ObjectID(delta.parentId);
-    }
-
-    return (await connect())
-      .collection(collectionName)
-      .updateOne({ _id }, { $set: delta })
-      .then(result => result.modifiedCount);
-  }
-
-  @odata.DELETE
-  public async remove(@odata.key key: string): Promise<number> {
-    // tslint:disable-next-line: variable-name
-    const _id = new ObjectID(key);
-    return (await connect())
-      .collection(collectionName)
-      .deleteOne({ _id })
-      .then(result => result.deletedCount);
   }
 }
