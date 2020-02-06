@@ -1,7 +1,29 @@
+import { ObjectID } from "mongodb";
 import { Edm } from "odata-v4-server";
-import { ICandle } from "../engine/Exchange";
 
-export class Candle implements ICandle {
+export class Candle {
+  @Edm.Computed
+  @Edm.String
+  // tslint:disable-next-line: variable-name
+  public _id: ObjectID;
+
+  @Edm.Key
+  @Edm.String
+  public exchange: string;
+
+  @Edm.Key
+  @Edm.String
+  public currency: string;
+
+  @Edm.Key
+  @Edm.String
+  public asset: string;
+
+  @Edm.Key
+  @Edm.Double
+  public period: number;
+
+  @Edm.Key
   @Edm.String
   public time: string;
 
@@ -20,7 +42,10 @@ export class Candle implements ICandle {
   @Edm.Double
   public volume: number;
 
-  constructor({ time, open, high, low, close, volume }: ICandle) {
-    Object.assign(this, { time, open, high, low, close, volume });
+  @Edm.String
+  public parentId: string;
+
+  constructor(data: any) {
+    Object.assign(this, data);
   }
 }
