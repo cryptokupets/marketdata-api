@@ -14,7 +14,15 @@ export class MarketDataServer extends ODataServer {
     const db = await connect();
     const collection = db.collection("candle");
     return new Promise(resolve => {
-      // UNDONE сначала удалить
+        collection.deleteMany({
+            exchange,
+            currency,
+            asset,
+            period,
+            time: { $gte: begin },
+            time: { $lte: end }
+        }, () => resolve());
+    }).then(() => new Promise(resolve => {
       const rs = streamCandle({
         exchange,
         currency,
@@ -37,6 +45,6 @@ export class MarketDataServer extends ODataServer {
       );
 
       rs.on("end", () => resolve());
-    });
+    }));
   }
 }
